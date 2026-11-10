@@ -5,7 +5,7 @@ import { FirstRunNotice } from './components/FirstRunNotice';
 import { ToastProvider } from './ui/Toast';
 import { TeamPage } from './pages/TeamPage';
 import { TodayPage } from './pages/TodayPage';
-import { ReviewsPage } from './pages/OtherPages';
+import { ReviewPage, ReviewsPage, TeamYearPage } from './pages/ReviewsPages';
 import { MeetingsPage } from './pages/MeetingsPage';
 import { PrepPage } from './pages/PrepPage';
 import { DebriefPage } from './pages/DebriefPage';
@@ -27,6 +27,8 @@ function Shell() {
           <Route path="/points/:id/preparer" element={<PrepPage />} />
           <Route path="/points/:id/debrief" element={<DebriefPage />} />
           <Route path="/bilans" element={<ReviewsPage />} />
+          <Route path="/bilans/equipe" element={<TeamYearPage />} />
+          <Route path="/bilans/:id" element={<ReviewPage />} />
           <Route path="/reglages" element={<SettingsPage />} />
           <Route path="/reglages/onboarding" element={<OnboardingTemplatesPage />} />
           <Route path="/reglages/modeles" element={<ModelsPage />} />
