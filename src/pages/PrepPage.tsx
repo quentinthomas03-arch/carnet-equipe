@@ -75,7 +75,7 @@ export function PrepPage() {
         <Avatar firstName={c.firstName} lastName={c.lastName} color={c.color} size={34} />
         <div className="min-w-0">
           <h1 className="text-[17px] font-semibold truncate">{c.firstName} {c.lastName}</h1>
-          <p className="text-[13px] text-muted">Préparer le point · {formatLong(s.next)}</p>
+          <p className="text-[13px] text-muted">{s.plannedLabel ?? 'Préparer le point'} · {formatLong(s.next)}</p>
         </div>
       </header>
 
@@ -109,7 +109,7 @@ export function PrepPage() {
               <div key={o.id} className="flex flex-col gap-1.5 py-1.5">
                 <div className="flex justify-between gap-3 text-[15px]">
                   <span>{OBJ_CATEGORY[o.category]} · {o.title}</span>
-                  <span className="text-muted">{o.progress} %</span>
+                  <span className="text-muted shrink-0 whitespace-nowrap">{o.progress} %</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-surface-2"><div className="h-1.5 rounded-full bg-accent" style={{ width: `${o.progress}%` }} /></div>
               </div>

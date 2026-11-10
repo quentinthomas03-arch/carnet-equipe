@@ -201,7 +201,8 @@ export async function addSkills(collaboratorId: string, names: string[], d: Carn
   const fresh: Skill[] = names
     .map((n) => n.trim())
     .filter((n) => n && !existing.has(n.toLowerCase()))
-    .map((name) => ({ id: newId(), createdAt: t, updatedAt: t, collaboratorId, name, current: 0, target: 0 }));
+    // createdAt décalé d'1 ms par compétence : l'ordre du référentiel est conservé à l'affichage.
+    .map((name, i) => ({ id: newId(), createdAt: new Date(Date.parse(t) + i).toISOString(), updatedAt: t, collaboratorId, name, current: 0, target: 0 }));
   await d.skills.bulkAdd(fresh);
 }
 

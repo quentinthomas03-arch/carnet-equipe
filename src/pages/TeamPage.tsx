@@ -68,7 +68,7 @@ export function TeamPage() {
       )}
 
       <div className="flex flex-col gap-3 px-4">
-        {shown.map((s) => <CollaboratorCard key={s.collaborator.id} s={s} />)}
+        {shown.map((s) => <CollaboratorCard key={s.collaborator.id} s={s} onboarding={team?.onboardings.get(s.collaborator.id)} />)}
       </div>
 
       {team && team.archived.length > 0 && (

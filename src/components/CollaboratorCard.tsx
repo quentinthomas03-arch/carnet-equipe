@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { CollaboratorSummary } from '../domain/cadence';
+import type { Onboarding } from '../db/types';
+import { OnboardingBar } from './OnboardingTab';
 import { formatShort } from '../domain/dates';
 import { Avatar } from '../ui/Avatar';
 import { Tag } from '../ui/Chip';
@@ -13,7 +15,7 @@ export function MeetingTag({ s }: { s: CollaboratorSummary['schedule'] }) {
 }
 
 /** Carte d'un collaborateur sur l'écran Équipe. */
-export function CollaboratorCard({ s }: { s: CollaboratorSummary }) {
+export function CollaboratorCard({ s, onboarding }: { s: CollaboratorSummary; onboarding?: Onboarding }) {
   const c = s.collaborator;
   const meta = [c.role, c.site].filter(Boolean).join(' · ');
   return (
@@ -24,8 +26,9 @@ export function CollaboratorCard({ s }: { s: CollaboratorSummary }) {
           <p className="text-[17px] font-semibold truncate">{c.firstName} {c.lastName}</p>
           {meta && <p className="text-[13px] text-muted truncate">{meta}</p>}
         </div>
-        <MeetingTag s={s.schedule} />
+        {onboarding ? <Tag tone="accent">Onboarding</Tag> : <MeetingTag s={s.schedule} />}
       </div>
+      {onboarding && <OnboardingBar onboarding={onboarding} />}
       <p className="text-[13px] text-muted">
         Dernier point <strong className="font-medium text-ink">{s.schedule.last ? formatShort(s.schedule.last) : 'aucun'}</strong>
         {' · '}prochain <strong className={`font-medium ${s.schedule.overdue ? 'text-warn' : 'text-ink'}`}>{formatShort(s.schedule.next)}</strong>

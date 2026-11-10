@@ -14,6 +14,8 @@ export const SETTING = {
   /** Listes modifiables. */
   sites: 'sites',
   activities: 'activities',
+  /** Référentiel de compétences proposé sur chaque fiche. */
+  skillCatalog: 'skillCatalog',
 } as const;
 
 /**

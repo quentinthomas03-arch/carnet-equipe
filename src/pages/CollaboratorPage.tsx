@@ -17,8 +17,10 @@ import { CollaboratorForm } from '../components/CollaboratorForm';
 import { MeetingTag } from '../components/CollaboratorCard';
 import { useQuickAdd } from '../components/QuickAdd';
 import { MeetingHistory } from '../components/MeetingHistory';
+import { ObjectivesTab } from '../components/ObjectivesTab';
+import { OnboardingBar, OnboardingTab } from '../components/OnboardingTab';
 
-type Tab = 'overview' | 'entries' | 'meetings' | 'objectives';
+type Tab = 'overview' | 'entries' | 'meetings' | 'objectives' | 'onboarding';
 
 export function CollaboratorPage() {
   const { id } = useParams();
@@ -26,7 +28,8 @@ export function CollaboratorPage() {
   const navigate = useNavigate();
   const quickAdd = useQuickAdd();
   const [params] = useSearchParams();
-  const [tab, setTab] = useState<Tab>(params.get('onglet') === 'points' ? 'meetings' : 'overview');
+  const initialTab = params.get('onglet');
+  const [tab, setTab] = useState<Tab>(initialTab === 'points' ? 'meetings' : initialTab === 'onboarding' ? 'onboarding' : 'overview');
   const [editing, setEditing] = useState(false);
 
   if (data === undefined) return null;
@@ -41,6 +44,8 @@ export function CollaboratorPage() {
   const { summary, entries } = data;
   const c = summary.collaborator;
   const hex = colorHex(c.color);
+  const recentArrival = !!c.arrivalDate && c.arrivalDate >= addDaysISO(todayISO(), -90);
+  const showOnboarding = !!data.onboarding || recentArrival;
 
   return (
     <div className="pb-6">
@@ -78,9 +83,16 @@ export function CollaboratorPage() {
             { value: 'entries', label: 'Entrées' },
             { value: 'meetings', label: 'Points' },
             { value: 'objectives', label: 'Objectifs' },
+            ...(showOnboarding || tab === 'onboarding' ? [{ value: 'onboarding' as Tab, label: 'Onboarding' }] : []),
           ]}
         />
 
+        {tab === 'overview' && data.onboarding && !data.onboarding.completedAt && (
+          <button type="button" onClick={() => setTab('onboarding')} className="card p-4 text-left flex flex-col gap-2">
+            <span className="section-title">Onboarding en cours</span>
+            <OnboardingBar onboarding={data.onboarding} />
+          </button>
+        )}
         {tab === 'overview' && <Overview data={data} />}
         {tab === 'entries' && <Timeline entries={entries} />}
         {tab === 'meetings' && (
@@ -89,22 +101,17 @@ export function CollaboratorPage() {
             <MeetingHistory meetings={data.meetings} entries={entries} />
           </div>
         )}
-        {tab === 'objectives' && <Soon phase="Phase 3">Objectifs, compétences, souhaits d'évolution, plan d'action et onboarding.</Soon>}
+        {tab === 'objectives' && <ObjectivesTab collaboratorId={c.id} firstName={c.firstName} objectives={data.objectives} skills={data.skills} plan={data.plan} />}
+        {tab === 'onboarding' && <OnboardingTab collaboratorId={c.id} onboarding={data.onboarding} arrivalDate={c.arrivalDate} />}
+        {!showOnboarding && tab === 'overview' && (
+          <button type="button" onClick={() => setTab('onboarding')} className="self-center min-h-[40px] text-[14px] text-muted">Démarrer un onboarding…</button>
+        )}
 
         <ArchiveButton id={c.id} firstName={c.firstName} archived={!!c.archivedAt} />
       </div>
 
       <CollaboratorForm open={editing} onClose={() => setEditing(false)} collaborator={c} />
     </div>
-  );
-}
-
-function Soon({ phase, children }: { phase: string; children: string }) {
-  return (
-    <section className="card p-5 flex flex-col gap-1.5">
-      <span className="text-[12px] font-semibold text-accent uppercase tracking-wider">{phase}</span>
-      <p className="text-[15px] leading-snug">{children}</p>
-    </section>
   );
 }
 
@@ -189,7 +196,7 @@ function NextMeeting({ summary }: { summary: NonNullable<ReturnType<typeof useCo
             {s.overdue ? 'Fixer à demain' : 'Valider'}
           </Button>
         )}
-        <label className="flex-1 min-h-[44px] rounded-2xl bg-surface-2 text-[15px] font-semibold inline-flex items-center justify-center relative">
+        <label className="flex-1 min-w-0 min-h-[44px] rounded-2xl bg-surface-2 text-[15px] font-semibold inline-flex items-center justify-center relative">
           Changer la date
           <input type="date" value={s.next} onChange={(e) => e.target.value && setDate(e.target.value)} aria-label="Date du prochain point" className="absolute inset-0 opacity-0" />
         </label>
