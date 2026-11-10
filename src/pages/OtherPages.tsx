@@ -1,14 +1,5 @@
 import { Placeholder } from './Placeholder';
 
-export function TodayPage() {
-  return (
-    <Placeholder title="Aujourd'hui" phase="Phase 1">
-      Tout ce qui arrive à échéance ou qui est en retard, tous collaborateurs confondus : tes promesses,
-      les leurs, les points à planifier.
-    </Placeholder>
-  );
-}
-
 export function MeetingsPage() {
   return (
     <Placeholder title="Points" phase="Phase 2">
