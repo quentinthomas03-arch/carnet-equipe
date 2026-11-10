@@ -81,9 +81,10 @@ export function SettingsPage() {
 
         <section className="card p-5" aria-labelledby="s-about">
           <h2 id="s-about" className="section-title mb-1">À propos</h2>
-          <Row label="Version" value={__APP_VERSION__} />
+          <Row label="Version" value={`${__APP_VERSION__} du ${format(new Date(__BUILD_DATE__), 'd MMM yyyy HH:mm', { locale: fr })}`} />
           <Row label="Schéma de données" value={`v${SCHEMA_VERSION}`} />
           <Row label="Serveur, compte, suivi" value="Aucun" />
+          <UpdateButton />
         </section>
       </div>
 
@@ -213,5 +214,25 @@ function ImportSection() {
         </div>
       )}
     </div>
+  );
+}
+
+/** Force la recherche d'une nouvelle version puis recharge l'appli. */
+function UpdateButton() {
+  const [state, setState] = useState<'idle' | 'checking'>('idle');
+  async function check() {
+    setState('checking');
+    try {
+      const reg = await navigator.serviceWorker?.getRegistration();
+      await reg?.update();
+    } catch {
+      /* hors ligne : on recharge quand même */
+    }
+    window.location.reload();
+  }
+  return (
+    <Button variant="secondary" className="w-full mt-3" onClick={check} disabled={state === 'checking'}>
+      {state === 'checking' ? 'Recherche…' : 'Rechercher une mise à jour'}
+    </Button>
   );
 }

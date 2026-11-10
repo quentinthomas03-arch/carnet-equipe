@@ -16,11 +16,12 @@ engagements, préparer les entretiens annuels et l'intégration des nouveaux arr
 
 1. [Installer l'appli sur l'iPhone](#1-installer-lappli-sur-liphone)
 2. [Sauvegarder et restaurer](#2-sauvegarder-et-restaurer)
-3. [Limites de Safari sur iPhone](#3-limites-de-safari-sur-iphone)
-4. [Déploiement (GitHub Pages)](#4-déploiement-github-pages)
-5. [Développement](#5-développement)
-6. [Architecture](#6-architecture)
-7. [Faire évoluer le schéma de données](#7-faire-évoluer-le-schéma-de-données)
+3. [Le cycle des points individuels](#3-le-cycle-des-points-individuels)
+4. [Limites de Safari sur iPhone](#4-limites-de-safari-sur-iphone)
+5. [Déploiement (GitHub Pages)](#5-déploiement-github-pages)
+6. [Développement](#6-développement)
+7. [Architecture](#7-architecture)
+8. [Faire évoluer le schéma de données](#8-faire-évoluer-le-schéma-de-données)
 
 ---
 
@@ -35,8 +36,9 @@ engagements, préparer les entretiens annuels et l'intégration des nouveaux arr
 Pourquoi ? Les données saisies dans Safari et celles de l'appli installée sont **deux espaces
 séparés**. L'appli installée est aussi mieux protégée contre l'effacement automatique.
 
-**Mises à jour** : rien à faire. Quand une nouvelle version est publiée, elle s'installe toute seule
-à l'ouverture suivante (parfois il faut fermer puis rouvrir l'appli une deuxième fois).
+**Mises à jour** : rien à faire. L'appli vérifie s'il existe une nouvelle version à chaque retour au
+premier plan et se recharge toute seule. En cas de doute : Réglages › **Rechercher une mise à jour**
+(la version et sa date de publication sont affichées juste au-dessus).
 
 ## 2. Sauvegarder et restaurer
 
@@ -66,7 +68,20 @@ les Réglages.
 Un fichier modifié, tronqué ou venant d'une version plus récente de l'appli est **refusé** et rien
 n'est changé.
 
-## 3. Limites de Safari sur iPhone
+## 3. Le cycle des points individuels
+
+1. **Pendant le mois** : dès que tu penses à quelque chose, bouton **+** → collaborateur → type → texte
+   (dictée avec le micro du clavier).
+2. **La veille** : onglet **Points** → **Préparer**. Tout y est : sujets, ce qui est resté en suspens,
+   engagements des deux côtés, réussites à féliciter, alertes, objectifs, décisions du dernier point.
+3. **Pendant le point** : coche au fil de la discussion (les cases sont conservées même si l'appli est fermée).
+4. **Juste après** : **Débriefer le point** (30 secondes) : décisions, nouveaux engagements, charge de
+   travail, note. Les éléments cochés sont archivés, les sujets non abordés sont reportés automatiquement.
+5. **Calendrier** : onglet Points → icône calendrier → **Exporter**. Le fichier `.ics` ajoute tes prochains
+   points (avec un rappel la veille à 17 h) et les échéances d'engagements au Calendrier de l'iPhone.
+   Réexporte après tes points : les événements gardent le même identifiant.
+
+## 4. Limites de Safari sur iPhone
 
 - **Supprimer l'icône de l'écran d'accueil efface toutes les données** de l'appli.
 - Réglages iPhone › Safari › *Effacer historique et données de sites* peut aussi les effacer.
@@ -76,11 +91,11 @@ n'est changé.
 - Hors appli installée, Safari peut effacer les données d'un site non visité depuis 7 jours.
 - **Pas de notifications** : sans serveur, une PWA ne peut pas envoyer de notifications en arrière-plan.
   Les rappels sont visibles à l'ouverture (écran *Aujourd'hui*, badges, bannières), et les points
-  pourront être exportés vers le calendrier de l'iPhone (fichier `.ics`, Phase 2).
+  sont exportables vers le calendrier de l'iPhone (fichier `.ics`, voir section 3).
 
 👉 **La seule vraie protection est l'export régulier** vers iCloud Drive.
 
-## 4. Déploiement (GitHub Pages)
+## 5. Déploiement (GitHub Pages)
 
 Le déploiement est **automatique** : chaque modification arrivant sur la branche `main` lance les
 tests puis publie l'appli (onglet **Actions** du dépôt pour suivre). Si un test échoue, rien n'est publié.
@@ -101,7 +116,7 @@ Chaque phase est livrée sur une branche avec une pull request. Pour publier :
 dépôt › **Pull requests** › ouvrir la PR › **Ready for review** si elle est en brouillon ›
 **Merge pull request** › **Confirm merge**. Le déploiement démarre tout seul.
 
-## 5. Développement
+## 6. Développement
 
 Prérequis : Node.js 22.
 
@@ -112,7 +127,7 @@ npm test           # tests (Vitest)
 npm run build      # vérification TypeScript + build de production dans dist/
 ```
 
-## 6. Architecture
+## 7. Architecture
 
 | Élément | Choix |
 | --- | --- |
@@ -154,7 +169,7 @@ recalculé (retards, prochain point suggéré) n'est stocké.
 Les réglages propres à l'appareil (date de dernière sauvegarde, première ouverture…) ne sont pas
 exportés.
 
-## 7. Faire évoluer le schéma de données
+## 8. Faire évoluer le schéma de données
 
 1. Modifier les types dans `src/db/types.ts`.
 2. Incrémenter `SCHEMA_VERSION` dans `src/db/migrations.ts` et ajouter `MIGRATIONS[n]` (pour les
