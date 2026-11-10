@@ -51,6 +51,7 @@ export function DebriefPage() {
       await saveDebrief({
         collaboratorId: c.id, date, checkedIds: checked, presented, decisions, note, workload,
         newCommitments: commitments, nextMeetingDate: next,
+        plannedMeetingId: data?.summary.schedule.plannedId,
       });
       clearChecks(c.id);
       toast('Point enregistré');

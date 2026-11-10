@@ -2,8 +2,10 @@ import { Link } from 'react-router-dom';
 import { useTeam } from '../db/hooks';
 import type { Entry } from '../db/types';
 import { buildToday } from '../domain/today';
-import { formatLong, todayISO } from '../domain/dates';
+import { formatLong, formatShort, todayISO } from '../domain/dates';
 import { isPending } from '../domain/entries';
+import { addDaysISO } from '../domain/dates';
+import { toggleOnboardingTask } from '../db/repo';
 import { PageHeader } from '../ui/PageHeader';
 import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
@@ -19,7 +21,12 @@ export function TodayPage() {
   const pending = team.entries.filter((e) => isPending(e) && (e.collaboratorId === 'team' || !team.byId.get(e.collaboratorId)?.archivedAt));
   const topics = pending.filter((e) => e.type === 'topic').length;
   const commitments = pending.filter((e) => e.type === 'myCommitment' || e.type === 'theirCommitment').length;
-  const nothing = !view.late.length && !view.today.length && !view.week.length && !view.meetings.length;
+  const horizon = addDaysISO(today, 7);
+  const obTasks = [...team.onboardings.values()]
+    .filter((o) => !team.byId.get(o.collaboratorId)?.archivedAt)
+    .flatMap((o) => o.tasks.filter((t) => !t.done && t.dueDate <= horizon).map((t) => ({ o, t })))
+    .sort((a, b) => a.t.dueDate.localeCompare(b.t.dueDate));
+  const nothing = !view.late.length && !view.today.length && !view.week.length && !view.meetings.length && !obTasks.length;
 
   const list = (title: string, entries: Entry[], tone = '') =>
     entries.length > 0 && (
@@ -56,6 +63,26 @@ export function TodayPage() {
                 <span className="text-[14px] font-semibold text-accent">Préparer</span>
               </Link>
             ))}
+          </section>
+        )}
+        {obTasks.length > 0 && (
+          <section className="flex flex-col gap-2">
+            <h2 className="section-title px-1">Onboarding · {obTasks.length}</h2>
+            <div className="card px-4 py-1">
+              {obTasks.map(({ o, t }) => {
+                const c = team.byId.get(o.collaboratorId);
+                const late = t.dueDate < today;
+                return (
+                  <div key={t.id} className="flex items-start gap-3 py-2 border-b border-line last:border-0">
+                    <input type="checkbox" checked={false} aria-label={t.label} onChange={() => toggleOnboardingTask(o.id, t.id)} className="w-6 h-6 mt-0.5 accent-[rgb(var(--accent))]" />
+                    <Link to={`/c/${o.collaboratorId}?onglet=onboarding`} className="flex-1">
+                      <span className="block text-[15px] leading-snug">{t.label}</span>
+                      <span className={`block text-[13px] ${late ? 'text-danger font-semibold' : 'text-muted'}`}>{c?.firstName} · {late ? 'en retard' : formatShort(t.dueDate)}</span>
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
           </section>
         )}
         {list('En retard', view.late, 'text-danger')}

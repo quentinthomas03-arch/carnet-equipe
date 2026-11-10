@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { CarnetDB } from './db';
 import { meetingSchedule } from '../domain/cadence';
-import { saveDebrief, createCollaborator, createEntries, postponeEntry, reopenEntry, resolveEntry, setArchived, updateEntry } from './repo';
+import { saveDebrief, startOnboarding, toggleOnboardingTask, deleteOnboarding, addSkills, saveDevelopmentPlan, ensureOnboardingTemplate, createCollaborator, createEntries, postponeEntry, reopenEntry, resolveEntry, setArchived, updateEntry } from './repo';
 
 let n = 0;
 let d: CarnetDB;
@@ -101,5 +101,47 @@ describe('débrief', () => {
     const cid = await createCollaborator(base, d);
     await saveDebrief({ collaboratorId: cid, date: '2026-11-12', checkedIds: [], presented: [], decisions: '', note: '', newCommitments: [], nextMeetingDate: '2026-12-18' }, d);
     expect((await d.collaborators.get(cid))!.nextMeetingDate).toBe('2026-12-18');
+  });
+});
+
+describe('onboarding (base)', () => {
+  it('démarre un parcours, crée les points de suivi, et le débrief réalise le point planifié', async () => {
+    await ensureOnboardingTemplate(d);
+    const cid = await createCollaborator(base, d);
+    const oid = await startOnboarding(cid, 'tpl-default', '2026-11-16', d);
+    const ob = (await d.onboardings.get(oid))!;
+    expect(ob.tasks.length).toBeGreaterThan(5);
+    expect((await d.collaborators.get(cid))!.arrivalDate).toBe('2026-11-16');
+    const planned = (await d.meetings.where('collaboratorId').equals(cid).toArray()).sort((a, b) => a.date.localeCompare(b.date));
+    expect(planned.map((m) => m.date)).toEqual(['2026-11-23', '2026-12-16', '2027-01-15']);
+
+    const c = (await d.collaborators.get(cid))!;
+    const sched = meetingSchedule(c, planned, '2026-11-20');
+    expect(sched.next).toBe('2026-11-23');
+    const mid = await saveDebrief({ collaboratorId: cid, date: '2026-11-23', checkedIds: [], presented: [], decisions: 'OK', note: '', newCommitments: [], plannedMeetingId: sched.plannedId }, d);
+    expect(mid).toBe(sched.plannedId);
+    expect((await d.meetings.get(mid))!).toMatchObject({ status: 'done', kind: 'onboarding', decisions: 'OK' });
+    expect(await d.meetings.count()).toBe(3);
+
+    await toggleOnboardingTask(oid, ob.tasks[0].id, d);
+    expect((await d.onboardings.get(oid))!.tasks[0].done).toBe(true);
+    await toggleOnboardingTask(oid, ob.tasks[0].id, d);
+    expect((await d.onboardings.get(oid))!.tasks[0]).not.toHaveProperty('doneAt');
+
+    await deleteOnboarding(oid, d);
+    expect(await d.onboardings.count()).toBe(0);
+    expect((await d.meetings.toArray()).map((m) => m.status)).toEqual(['done']);
+  });
+
+  it('n’ajoute pas deux fois la même compétence et crée le plan d’évolution à la demande', async () => {
+    const cid = await createCollaborator(base, d);
+    await addSkills(cid, ['Rigueur', 'Sécurité'], d);
+    await addSkills(cid, ['rigueur', ' ', 'Relation client'], d);
+    expect((await d.skills.toArray()).map((s) => s.name).sort()).toEqual(['Relation client', 'Rigueur', 'Sécurité']);
+    await saveDevelopmentPlan(cid, { wishes: 'Référent aération' }, d);
+    await saveDevelopmentPlan(cid, { mobility: 'Non' }, d);
+    const plans = await d.developmentPlans.toArray();
+    expect(plans).toHaveLength(1);
+    expect(plans[0]).toMatchObject({ wishes: 'Référent aération', mobility: 'Non' });
   });
 });

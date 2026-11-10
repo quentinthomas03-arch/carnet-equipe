@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -71,6 +72,15 @@ export function SettingsPage() {
           <ListEditor settingKey={SETTING.sites} fallback={DEFAULT_SITES} label="Sites" placeholder="Nouveau site" />
           <ListEditor settingKey={SETTING.activities} fallback={DEFAULT_ACTIVITIES} label="Activités" placeholder="Nouvelle activité" />
         </section>
+
+        <nav className="card px-5" aria-label="Modèles">
+          <Link to="/reglages/onboarding" className="flex items-center justify-between min-h-[52px] border-b border-line">
+            <span className="text-[16px]">Parcours d'intégration (modèles)</span><Icon name="chevron" size={18} className="text-muted" />
+          </Link>
+          <Link to="/reglages/modeles" className="flex items-center justify-between min-h-[52px]">
+            <span className="text-[16px]">Modèles d'objectifs et compétences</span><Icon name="chevron" size={18} className="text-muted" />
+          </Link>
+        </nav>
 
         <StorageSection storage={storage} onChange={setStorage} />
 

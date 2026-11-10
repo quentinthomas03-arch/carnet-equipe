@@ -13,6 +13,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { CollaboratorPage } from './pages/CollaboratorPage';
 import { TopicsPage } from './pages/TopicsPage';
 import { CommitmentsPage } from './pages/CommitmentsPage';
+import { ModelsPage, OnboardingTemplatesPage } from './pages/TemplatesPages';
 
 function Shell() {
   const quickAdd = useQuickAdd();
@@ -27,6 +28,8 @@ function Shell() {
           <Route path="/points/:id/debrief" element={<DebriefPage />} />
           <Route path="/bilans" element={<ReviewsPage />} />
           <Route path="/reglages" element={<SettingsPage />} />
+          <Route path="/reglages/onboarding" element={<OnboardingTemplatesPage />} />
+          <Route path="/reglages/modeles" element={<ModelsPage />} />
           <Route path="/c/:id" element={<CollaboratorPage />} />
           <Route path="/a-aborder" element={<TopicsPage />} />
           <Route path="/engagements" element={<CommitmentsPage />} />

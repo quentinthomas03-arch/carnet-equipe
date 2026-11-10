@@ -35,7 +35,8 @@ function Tab({ to, label, icon, badge }: (typeof TABS)[number] & { badge?: numbe
 export function TabBar({ onQuickAdd }: { onQuickAdd: () => void }) {
   const team = useTeam();
   const badge = team
-    ? buildToday(team.entries.filter((e) => e.collaboratorId === 'team' || !team.byId.get(e.collaboratorId)?.archivedAt), team.active, todayISO()).badge
+    ? buildToday(team.entries.filter((e) => e.collaboratorId === 'team' || !team.byId.get(e.collaboratorId)?.archivedAt), team.active, todayISO()).badge +
+      [...team.onboardings.values()].filter((o) => !team.byId.get(o.collaboratorId)?.archivedAt).flatMap((o) => o.tasks).filter((t) => !t.done && t.dueDate < todayISO()).length
     : 0;
   return (
     <nav aria-label="Navigation principale" className="fixed bottom-0 inset-x-0 z-30 bg-surface/95 backdrop-blur border-t border-line pb-safe">

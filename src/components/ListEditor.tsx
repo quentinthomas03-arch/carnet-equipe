@@ -25,7 +25,7 @@ export function ListEditor({ settingKey, fallback, label, placeholder }: { setti
         ))}
       </ul>
       <form onSubmit={(e) => { e.preventDefault(); add(); }} className="flex gap-2">
-        <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={placeholder} aria-label={placeholder} className="flex-1 min-h-[44px] rounded-2xl bg-surface-2 px-3 placeholder:text-muted" />
+        <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={placeholder} aria-label={placeholder} className="flex-1 min-w-0 min-h-[44px] rounded-2xl bg-surface-2 px-3 placeholder:text-muted" />
         <button type="submit" disabled={!draft.trim()} className="min-h-[44px] px-4 rounded-2xl bg-accent text-accent-ink font-semibold disabled:opacity-40">Ajouter</button>
       </form>
     </div>

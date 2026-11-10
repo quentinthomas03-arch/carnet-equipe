@@ -29,6 +29,9 @@ export function lastMeetingDate(meetings: Meeting[]): DateISO | undefined {
 
 export interface MeetingSchedule {
   last?: DateISO;
+  /** Point planifié (ex. suivi d'onboarding) qui fixe la date du prochain point. */
+  plannedId?: string;
+  plannedLabel?: string;
   /** Date retenue pour le prochain point. */
   next: DateISO;
   /** Vrai si la date vient du calcul (non validée par le manager). */
@@ -48,9 +51,21 @@ export function meetingSchedule(c: Collaborator, meetings: Meeting[], today: Dat
   const validated = c.nextMeetingDate && (!last || c.nextMeetingDate > last) ? c.nextMeetingDate : undefined;
   const created = toDateISO(new Date(c.createdAt));
   const base = last ?? (c.arrivalDate && c.arrivalDate > created ? c.arrivalDate : created);
-  const next = validated ?? addDaysISO(base, c.cadenceDays);
+  let next = validated ?? addDaysISO(base, c.cadenceDays);
+  let suggested = !validated;
+  // Un point planifié (suivi d'onboarding) postérieur au dernier point et plus proche l'emporte.
+  const planned = meetings
+    .filter((m) => m.status === 'planned' && (!last || m.date > last))
+    .sort((a, b) => a.date.localeCompare(b.date))[0];
+  if (planned && planned.date <= next) {
+    next = planned.date;
+    suggested = false;
+  }
   const daysUntil = daysBetween(today, next);
-  return { last, next, suggested: !validated, daysUntil, overdue: daysUntil < 0 };
+  return {
+    last, next, suggested, daysUntil, overdue: daysUntil < 0,
+    ...(planned && planned.date === next ? { plannedId: planned.id, plannedLabel: planned.label } : {}),
+  };
 }
 
 export interface CollaboratorSummary {

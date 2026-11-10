@@ -47,6 +47,14 @@ describe('rythme des points', () => {
     expect(s.suggested).toBe(true);
   });
 
+  it('un point de suivi planifié plus proche fixe le prochain point', () => {
+    const planned = { ...meeting('2026-11-20', 'planned', 'p1'), kind: 'onboarding' as const, label: 'Point S+4' };
+    const s = meetingSchedule(collaborator({ cadenceDays: 30 }), [meeting('2026-11-01'), planned], '2026-11-10');
+    expect(s).toMatchObject({ next: '2026-11-20', suggested: false, plannedId: 'p1', plannedLabel: 'Point S+4' });
+    const far = { ...planned, date: '2027-01-15' };
+    expect(meetingSchedule(collaborator({ cadenceDays: 30 }), [meeting('2026-11-01'), far], '2026-11-10').plannedId).toBeUndefined();
+  });
+
   it('gère les fins de mois et années bissextiles', () => {
     expect(meetingSchedule(collaborator({ cadenceDays: 30 }), [meeting('2028-01-31')], '2028-02-01').next).toBe('2028-03-01');
   });

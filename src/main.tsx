@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import { App } from './App';
 import { initSettings } from './db/settings';
+import { ensureOnboardingTemplate } from './db/repo';
 import { requestPersistence } from './lib/storage';
 import './index.css';
 
@@ -25,6 +26,7 @@ registerSW({
 // Demande au navigateur de ne pas effacer la base (voir lib/storage.ts).
 void requestPersistence();
 void initSettings();
+void ensureOnboardingTemplate();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

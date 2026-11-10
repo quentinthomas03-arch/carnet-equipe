@@ -81,6 +81,29 @@ n'est changé.
    points (avec un rappel la veille à 17 h) et les échéances d'engagements au Calendrier de l'iPhone.
    Réexporte après tes points : les événements gardent le même identifiant.
 
+### Objectifs, compétences, évolution
+
+Fiche collaborateur › onglet **Objectifs** : objectifs (catégories du formulaire annuel : Sécurité, Qualité,
+Métier, Production ; individuel ou collectif ; pondération, avancement, notes de suivi), compétences
+(niveau actuel / visé), souhaits d'évolution, formations, plan d'action. Les objectifs en cours apparaissent
+dans « Préparer le point ». Un objectif peut être enregistré comme **modèle réutilisable**.
+
+### Onboarding des nouveaux arrivants
+
+- En ajoutant une recrue avec sa date d'arrivée, coche **Nouvelle recrue** : le parcours est daté
+  automatiquement (étapes avant l'arrivée comprises) et les **points de suivi** sont planifiés.
+- La recrue apparaît sur l'écran Équipe avec sa progression ; les étapes en retard ou de la semaine
+  remontent dans **Aujourd'hui**.
+- Le **modèle** se modifie dans Réglages › Parcours d'intégration ; le parcours d'une recrue s'ajuste sur
+  sa fiche (onglet Onboarding) sans toucher au modèle.
+
+### Pack employeur (privé)
+
+Le dépôt étant public, rien de spécifique à l'employeur n'y figure. Le parcours d'intégration détaillé,
+le référentiel de compétences et les modèles d'objectifs sont fournis dans un fichier privé
+`carnet-equipe-pack-employeur.json` : enregistre-le dans Fichiers, puis Réglages › **Importer une
+sauvegarde** › **Fusionner**. Tes données ne sont pas touchées.
+
 ## 4. Limites de Safari sur iPhone
 
 - **Supprimer l'icône de l'écran d'accueil efface toutes les données** de l'appli.
