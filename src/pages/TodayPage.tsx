@@ -49,10 +49,11 @@ export function TodayPage() {
           <section className="flex flex-col gap-2">
             <h2 className="section-title px-1">Points à faire</h2>
             {view.meetings.map((s) => (
-              <Link key={s.collaborator.id} to={`/c/${s.collaborator.id}`} className="card px-4 py-3 flex items-center gap-3 active:opacity-80">
+              <Link key={s.collaborator.id} to={`/points/${s.collaborator.id}/preparer`} className="card px-4 py-3 flex items-center gap-3 active:opacity-80">
                 <Avatar firstName={s.collaborator.firstName} lastName={s.collaborator.lastName} color={s.collaborator.color} size={34} />
                 <span className="flex-1 font-medium">{s.collaborator.firstName} {s.collaborator.lastName}</span>
                 <MeetingTag s={s.schedule} />
+                <span className="text-[14px] font-semibold text-accent">Préparer</span>
               </Link>
             ))}
           </section>
