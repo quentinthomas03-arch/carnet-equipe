@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { checkImport, type ImportCheck } from '../domain/backup';
@@ -12,6 +11,9 @@ import { Sheet } from '../ui/Sheet';
 import { ExportPanel } from '../components/ExportPanel';
 import { SensitiveDataText } from '../components/FirstRunNotice';
 import { useBackupState } from '../components/useBackupState';
+import { ListEditor } from '../components/ListEditor';
+import { BackHeader } from '../ui/BackHeader';
+import { DEFAULT_ACTIVITIES, DEFAULT_SITES, SETTING } from '../db/settings';
 
 const TABLE_LABELS: Record<string, string> = {
   collaborators: 'collaborateurs',
@@ -32,7 +34,6 @@ function Row({ label, value, tone }: { label: string; value: string; tone?: 'ok'
 }
 
 export function SettingsPage() {
-  const navigate = useNavigate();
   const backup = useBackupState();
   const [storage, setStorage] = useState<StorageStatus | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
@@ -47,12 +48,7 @@ export function SettingsPage() {
 
   return (
     <div className="pb-8">
-      <header className="pt-safe px-2 flex items-center gap-1 min-h-[56px]">
-        <button type="button" onClick={() => navigate(-1)} aria-label="Retour" className="w-11 h-11 flex items-center justify-center text-accent">
-          <Icon name="back" size={24} strokeWidth={2.2} />
-        </button>
-        <h1 className="text-[22px] font-bold">Réglages</h1>
-      </header>
+      <BackHeader title="Réglages" />
 
       <div className="flex flex-col gap-4 px-4 mt-2">
         <section className="card p-5 flex flex-col gap-3" aria-labelledby="s-backup">
@@ -68,6 +64,12 @@ export function SettingsPage() {
             Un rappel s'affiche si ta dernière sauvegarde a plus de 30 jours. Le fichier contient tout, y compris
             les notes : range-le dans ton iCloud Drive personnel.
           </p>
+        </section>
+
+        <section className="card p-5 flex flex-col gap-5" aria-labelledby="s-lists">
+          <h2 id="s-lists" className="section-title">Organisation</h2>
+          <ListEditor settingKey={SETTING.sites} fallback={DEFAULT_SITES} label="Sites" placeholder="Nouveau site" />
+          <ListEditor settingKey={SETTING.activities} fallback={DEFAULT_ACTIVITIES} label="Activités" placeholder="Nouvelle activité" />
         </section>
 
         <StorageSection storage={storage} onChange={setStorage} />
