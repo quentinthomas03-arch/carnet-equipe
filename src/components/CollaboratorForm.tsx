@@ -3,7 +3,9 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import type { Collaborator } from '../db/types';
 import { SETTING, useSetting, DEFAULT_ACTIVITIES, DEFAULT_SITES } from '../db/settings';
-import { createCollaborator, updateCollaborator, type CollaboratorInput } from '../db/repo';
+import { createCollaborator, startOnboarding, updateCollaborator, type CollaboratorInput } from '../db/repo';
+import { defaultTemplate } from '../domain/onboarding';
+import { addDaysISO, todayISO } from '../domain/dates';
 import { CADENCE_OPTIONS } from '../domain/cadence';
 import { COLLABORATOR_COLORS, COLOR_KEYS, nextColor } from '../ui/palette';
 import { Sheet } from '../ui/Sheet';
@@ -25,6 +27,9 @@ export function CollaboratorForm({ open, onClose, collaborator, onCreated }: { o
     firstName: '', lastName: '', role: '', site: sites[0] ?? '', activity: activities[0] ?? '', arrivalDate: undefined, cadenceDays: 30, color: nextColor(usedColors),
   });
   const [form, setForm] = useState<CollaboratorInput>(blank);
+  const [onboard, setOnboard] = useState(true);
+  const templates = useLiveQuery(() => db.onboardingTemplates.toArray(), []) ?? [];
+  const isRecruit = !collaborator && !!form.arrivalDate && form.arrivalDate >= addDaysISO(todayISO(), -30);
 
   useEffect(() => {
     if (!open) return;
@@ -46,7 +51,11 @@ export function CollaboratorForm({ open, onClose, collaborator, onCreated }: { o
       toast('Fiche mise à jour');
     } else {
       const id = await createCollaborator(clean);
-      toast(`${clean.firstName} ajouté·e`);
+      const tpl = defaultTemplate(templates);
+      if (isRecruit && onboard && tpl && clean.arrivalDate) {
+        await startOnboarding(id, tpl.id, clean.arrivalDate);
+        toast(`${clean.firstName} ajouté·e, onboarding démarré`);
+      } else toast(`${clean.firstName} ajouté·e`);
       onCreated?.(id);
     }
     onClose();
@@ -109,6 +118,14 @@ export function CollaboratorForm({ open, onClose, collaborator, onCreated }: { o
             </select>
           </label>
         </div>
+        {isRecruit && (
+          <label className="flex items-start gap-3 rounded-2xl bg-accent-soft p-3">
+            <input type="checkbox" checked={onboard} onChange={(e) => setOnboard(e.target.checked)} className="w-6 h-6 mt-0.5 accent-[rgb(var(--accent))]" />
+            <span className="text-[15px] leading-snug text-accent-soft-ink">
+              <strong>Nouvelle recrue :</strong> démarrer le parcours d'intégration « {defaultTemplate(templates)?.name ?? '—'} » à partir de la date d'arrivée.
+            </span>
+          </label>
+        )}
         <fieldset>
           <legend className="section-title mb-2">Couleur de repérage</legend>
           <div className="flex flex-wrap gap-2.5">
