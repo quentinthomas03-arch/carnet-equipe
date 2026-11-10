@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useCollaborator } from '../db/hooks';
 import { setArchived, updateCollaborator } from '../db/repo';
 import type { Entry, EntryType } from '../db/types';
@@ -16,6 +16,7 @@ import { EntryRow } from '../components/EntryRow';
 import { CollaboratorForm } from '../components/CollaboratorForm';
 import { MeetingTag } from '../components/CollaboratorCard';
 import { useQuickAdd } from '../components/QuickAdd';
+import { MeetingHistory } from '../components/MeetingHistory';
 
 type Tab = 'overview' | 'entries' | 'meetings' | 'objectives';
 
@@ -24,7 +25,8 @@ export function CollaboratorPage() {
   const data = useCollaborator(id);
   const navigate = useNavigate();
   const quickAdd = useQuickAdd();
-  const [tab, setTab] = useState<Tab>('overview');
+  const [params] = useSearchParams();
+  const [tab, setTab] = useState<Tab>(params.get('onglet') === 'points' ? 'meetings' : 'overview');
   const [editing, setEditing] = useState(false);
 
   if (data === undefined) return null;
@@ -81,7 +83,12 @@ export function CollaboratorPage() {
 
         {tab === 'overview' && <Overview data={data} />}
         {tab === 'entries' && <Timeline entries={entries} />}
-        {tab === 'meetings' && <Soon phase="Phase 2">Préparation et débrief des points, historique avec date et résumé.</Soon>}
+        {tab === 'meetings' && (
+          <div className="flex flex-col gap-3">
+            <Link to={`/points/${c.id}/preparer`} className="min-h-[48px] rounded-2xl bg-surface-2 font-semibold flex items-center justify-center">Préparer le prochain point</Link>
+            <MeetingHistory meetings={data.meetings} entries={entries} />
+          </div>
+        )}
         {tab === 'objectives' && <Soon phase="Phase 3">Objectifs, compétences, souhaits d'évolution, plan d'action et onboarding.</Soon>}
 
         <ArchiveButton id={c.id} firstName={c.firstName} archived={!!c.archivedAt} />
@@ -173,6 +180,9 @@ function NextMeeting({ summary }: { summary: NonNullable<ReturnType<typeof useCo
         </div>
         <MeetingTag s={s} />
       </div>
+      <Link to={`/points/${c.id}/preparer`} className="min-h-[48px] rounded-2xl bg-accent text-accent-ink font-semibold flex items-center justify-center">
+        Préparer le point
+      </Link>
       <div className="flex gap-2">
         {s.suggested && (
           <Button variant="secondary" className="flex-1 !min-h-[44px] !text-[15px]" onClick={() => setDate(s.overdue ? addDaysISO(today, 1) : s.next)}>

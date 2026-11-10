@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { CarnetDB } from './db';
-import { createCollaborator, createEntries, postponeEntry, reopenEntry, resolveEntry, setArchived, updateEntry } from './repo';
+import { meetingSchedule } from '../domain/cadence';
+import { saveDebrief, createCollaborator, createEntries, postponeEntry, reopenEntry, resolveEntry, setArchived, updateEntry } from './repo';
 
 let n = 0;
 let d: CarnetDB;
@@ -63,5 +64,42 @@ describe('collaborateurs', () => {
     await setArchived(id, false, d);
     expect((await d.collaborators.get(id))!.archivedAt).toBeUndefined();
     expect(await d.entries.count()).toBe(1);
+  });
+});
+
+
+describe('débrief', () => {
+  it('enregistre le point, archive, reporte, crée les engagements et recalcule le prochain point', async () => {
+    const cid = await createCollaborator({ ...base, nextMeetingDate: '2026-11-12' }, d);
+    const [t1, t2, m1] = [
+      ...(await createEntries({ collaboratorIds: [cid], type: 'topic', text: 'Sujet A' }, d)),
+      ...(await createEntries({ collaboratorIds: [cid], type: 'topic', text: 'Sujet B' }, d)),
+      ...(await createEntries({ collaboratorIds: [cid], type: 'myCommitment', text: 'Promesse' }, d)),
+    ];
+    const presented = await d.entries.bulkGet([t1, t2, m1]);
+    const mid = await saveDebrief({
+      collaboratorId: cid, date: '2026-11-12', checkedIds: [t1], presented: presented as never,
+      decisions: 'Décision 1', note: '', workload: 'tense',
+      newCommitments: [{ type: 'theirCommitment', text: 'Envoyer le rapport', dueDate: '2026-11-20' }, { type: 'myCommitment', text: '  ' }],
+    }, d);
+
+    const m = (await d.meetings.get(mid))!;
+    expect(m).toMatchObject({ status: 'done', coveredEntryIds: [t1], postponedEntryIds: [t2], workload: 'tense' });
+    expect((await d.entries.get(t1))!).toMatchObject({ status: 'done', meetingId: mid });
+    expect((await d.entries.get(t2))!).toMatchObject({ status: 'open', postponeCount: 1 });
+    expect((await d.entries.get(m1))!.status).toBe('open');
+    const created = (await d.entries.toArray()).filter((e) => e.meetingId === mid && e.type === 'theirCommitment');
+    expect(created).toHaveLength(1);
+    expect(await d.entries.count()).toBe(4);
+
+    const c = (await d.collaborators.get(cid))!;
+    expect(c.nextMeetingDate).toBeUndefined();
+    expect(meetingSchedule(c, [m], '2026-11-12').next).toBe('2026-12-12');
+  });
+
+  it('garde la date du prochain point choisie au débrief', async () => {
+    const cid = await createCollaborator(base, d);
+    await saveDebrief({ collaboratorId: cid, date: '2026-11-12', checkedIds: [], presented: [], decisions: '', note: '', newCommitments: [], nextMeetingDate: '2026-12-18' }, d);
+    expect((await d.collaborators.get(cid))!.nextMeetingDate).toBe('2026-12-18');
   });
 });

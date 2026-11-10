@@ -3,7 +3,8 @@
  * (indispensable pour la fusion lors d'un import).
  */
 import { db as defaultDb, type CarnetDB } from './db';
-import type { Collaborator, DateISO, Entry, EntryType } from './types';
+import type { Collaborator, DateISO, Entry, EntryType, Meeting } from './types';
+import { planDebrief, type DebriefInput } from '../domain/meetingPrep';
 
 export const newId = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
@@ -94,4 +95,62 @@ export async function dropEntry(id: string, d: CarnetDB = defaultDb) {
 
 export async function deleteEntry(id: string, d: CarnetDB = defaultDb) {
   await d.entries.delete(id);
+}
+
+// --- Points individuels ----------------------------------------------------
+
+
+/**
+ * Enregistre un point effectué, en une seule transaction :
+ * crée le point, archive les éléments cochés, reporte les sujets non abordés,
+ * crée les nouveaux engagements et fixe la date du prochain point.
+ */
+export async function saveDebrief(input: DebriefInput, d: CarnetDB = defaultDb): Promise<string> {
+  const plan = planDebrief(input);
+  const t = now();
+  const meetingId = newId();
+  await d.transaction('rw', d.meetings, d.entries, d.collaborators, async () => {
+    const meeting: Meeting = {
+      id: meetingId,
+      createdAt: t,
+      updatedAt: t,
+      collaboratorId: input.collaboratorId,
+      kind: 'regular',
+      date: input.date,
+      status: 'done',
+      decisions: input.decisions.trim(),
+      note: input.note.trim(),
+      ...(input.workload ? { workload: input.workload } : {}),
+      coveredEntryIds: plan.resolve,
+      postponedEntryIds: plan.postpone,
+    };
+    await d.meetings.add(meeting);
+    for (const id of plan.resolve) await d.entries.update(id, { status: 'done', resolvedAt: t, meetingId, updatedAt: t });
+    for (const id of plan.postpone) {
+      const e = await d.entries.get(id);
+      if (e) await d.entries.put({ ...e, status: 'open', postponeCount: e.postponeCount + 1, updatedAt: t });
+    }
+    const fresh = input.newCommitments.filter((c) => c.text.trim());
+    await d.entries.bulkAdd(
+      fresh.map((c) => ({
+        id: newId(), createdAt: t, updatedAt: t, collaboratorId: input.collaboratorId, type: c.type, text: c.text.trim(),
+        ...(c.dueDate ? { dueDate: c.dueDate } : {}), status: 'open' as const, postponeCount: 0, meetingId,
+      })),
+    );
+    const col = await d.collaborators.get(input.collaboratorId);
+    if (col) {
+      const { nextMeetingDate: _n, ...rest } = col;
+      await d.collaborators.put(input.nextMeetingDate ? { ...rest, nextMeetingDate: input.nextMeetingDate, updatedAt: t } : { ...rest, updatedAt: t });
+    }
+  });
+  return meetingId;
+}
+
+export async function updateMeeting(id: string, patch: Partial<Pick<Meeting, 'date' | 'decisions' | 'note' | 'workload'>>, d: CarnetDB = defaultDb) {
+  await d.meetings.update(id, { ...patch, updatedAt: now() });
+}
+
+/** Supprime un point de l'historique (les entrées traitées restent traitées). */
+export async function deleteMeeting(id: string, d: CarnetDB = defaultDb) {
+  await d.meetings.delete(id);
 }

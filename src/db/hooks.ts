@@ -34,10 +34,11 @@ export function useCollaborator(id: string | undefined) {
     if (!id) return null;
     const c = await db.collaborators.get(id);
     if (!c) return null;
-    const [entries, meetings] = await Promise.all([
+    const [entries, meetings, objectives] = await Promise.all([
       db.entries.where('collaboratorId').equals(id).toArray(),
       db.meetings.where('collaboratorId').equals(id).toArray(),
+      db.objectives.where('collaboratorId').equals(id).toArray(),
     ]);
-    return { summary: summarize(c, entries, meetings, todayISO()), entries, meetings };
+    return { summary: summarize(c, entries, meetings, todayISO()), entries, meetings, objectives };
   }, [id]);
 }
