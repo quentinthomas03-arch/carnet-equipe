@@ -144,7 +144,7 @@ export function teamDocument(t: TeamYear, opts: { withLastName: boolean }): Revi
         title: 'Rituels managériaux',
         blocks: [{ kind: 'list', items: [
           `Points individuels réalisés : ${t.meetingsDone}${regularity !== null ? ` sur ${t.meetingsExpected} attendus selon les rythmes fixés (${regularity} %)` : ''}`,
-          `Mes engagements envers l'équipe : ${t.mine.rate !== null ? `${t.mine.rate} % tenus (${t.mine.kept.length} tenus, ${t.mine.notKept.length} non tenus)` : 'non évaluable'}`,
+          `Mes engagements envers l'équipe : ${t.mine.rate !== null ? `${t.mine.rate} % tenus (${t.mine.kept.length} tenu${t.mine.kept.length > 1 ? 's' : ''}, ${t.mine.notKept.length} non tenu${t.mine.notKept.length > 1 ? 's' : ''})` : 'non évaluable'}`,
           ...(wl ? [`Charge de travail ressentie : ${t.workload.ok} OK, ${t.workload.tense} tendue, ${t.workload.overloaded} surcharge (${wl} points)`] : []),
         ] }],
       },
