@@ -67,6 +67,8 @@ export interface DebriefInput {
   newCommitments: NewCommitment[];
   /** Date du prochain point retenue (validée par le manager). */
   nextMeetingDate?: DateISO;
+  /** Point planifié (ex. suivi d'onboarding) que ce débrief vient réaliser. */
+  plannedMeetingId?: string;
 }
 
 export interface DebriefPlan {
