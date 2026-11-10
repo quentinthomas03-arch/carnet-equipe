@@ -40,12 +40,14 @@ export interface MeetingSchedule {
 
 /**
  * Prochain point = date validée par le manager si elle existe et n'est pas antérieure au dernier point ;
- * sinon dernier point (ou date d'arrivée, ou date de création de la fiche) + rythme.
+ * sinon dernier point + rythme. Sans aucun point enregistré, on part de la date la plus récente entre
+ * l'arrivée et la création de la fiche : un collaborateur ancien ajouté aujourd'hui n'est pas « en retard de 2 ans ».
  */
 export function meetingSchedule(c: Collaborator, meetings: Meeting[], today: DateISO): MeetingSchedule {
   const last = lastMeetingDate(meetings);
   const validated = c.nextMeetingDate && (!last || c.nextMeetingDate > last) ? c.nextMeetingDate : undefined;
-  const base = last ?? c.arrivalDate ?? toDateISO(new Date(c.createdAt));
+  const created = toDateISO(new Date(c.createdAt));
+  const base = last ?? (c.arrivalDate && c.arrivalDate > created ? c.arrivalDate : created);
   const next = validated ?? addDaysISO(base, c.cadenceDays);
   const daysUntil = daysBetween(today, next);
   return { last, next, suggested: !validated, daysUntil, overdue: daysUntil < 0 };

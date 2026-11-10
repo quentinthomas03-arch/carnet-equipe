@@ -27,6 +27,13 @@ describe('rythme des points', () => {
     expect(meetingSchedule(collaborator({ createdAt: '2026-11-05T10:00:00Z', cadenceDays: 30 }), [], '2026-11-10').next).toBe('2026-12-05');
   });
 
+  it('collaborateur ancien ajouté récemment : part de la création de la fiche', () => {
+    const c = collaborator({ arrivalDate: '2020-03-01', createdAt: '2026-11-08T10:00:00Z', cadenceDays: 30 });
+    const s = meetingSchedule(c, [], '2026-11-10');
+    expect(s.next).toBe('2026-12-08');
+    expect(s.overdue).toBe(false);
+  });
+
   it('respecte la date validée par le manager', () => {
     const s = meetingSchedule(collaborator({ nextMeetingDate: '2026-11-20' }), [meeting('2026-10-02')], '2026-11-10');
     expect(s.next).toBe('2026-11-20');
