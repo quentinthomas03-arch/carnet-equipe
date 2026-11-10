@@ -104,6 +104,20 @@ le référentiel de compétences et les modèles d'objectifs sont fournis dans u
 `carnet-equipe-pack-employeur.json` : enregistre-le dans Fichiers, puis Réglages › **Importer une
 sauvegarde** › **Fusionner**. Tes données ne sont pas touchées.
 
+### Bilan d'entretien annuel
+
+Onglet **Bilans** : choisis la période (année civile par défaut ; l'année précédente est proposée de
+janvier à mars), puis un collaborateur. Le bilan compile tout ce qui a été noté : réussites, alertes,
+objectifs et suivi, engagements tenus / non tenus (les tiens et les siens), sujets abordés et décisions,
+charge de travail, compétences, évolution et formations.
+
+- **Préparer pour Claude** : copie un texte contenant une consigne de rédaction (rubriques du formulaire
+  d'entretien, objectifs N+1 SMART, questions à poser) et les données. Rien n'est envoyé par l'appli :
+  seule ta copie les transmet. Les noms de famille sont exclus par défaut.
+- **PDF** : bilan mis en page, à enregistrer ou partager via le menu iOS.
+- **Année de mon équipe** : arrivées, onboardings, régularité des points, tenue de tes engagements,
+  réussites collectives et individuelles, progression de chacun : la matière de ton dossier de chef de groupe.
+
 ## 4. Limites de Safari sur iPhone
 
 - **Supprimer l'icône de l'écran d'accueil efface toutes les données** de l'appli.
