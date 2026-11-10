@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design système « Ardoise » — jetons de couleur (triplets RVB).
+ * Clair par défaut, sombre automatiquement selon le réglage de l'iPhone.
+ * Contrastes vérifiés ≥ 4,5:1 pour le texte (muted sur surface inclus).
+ */
+:root {
+  --bg: 245 246 248;
+  --surface: 255 255 255;
+  --surface-2: 240 242 245;
+  --line: 227 230 234;
+  --ink: 21 25 30;
+  --muted: 91 100 112;
+  --accent: 14 94 111;
+  --accent-ink: 255 255 255;
+  --accent-soft: 230 241 243;
+  --accent-soft-ink: 11 63 74;
+  --warn: 154 52 18;
+  --warn-soft: 253 236 221;
+  --danger: 155 28 28;
+  --danger-soft: 251 228 228;
+  --ok: 30 107 58;
+  --ok-soft: 229 244 234;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: 14 17 20;
+    --surface: 23 27 32;
+    --surface-2: 30 35 41;
+    --line: 38 44 51;
+    --ink: 232 236 240;
+    --muted: 154 164 175;
+    --accent: 92 194 211;
+    --accent-ink: 6 41 44;
+    --accent-soft: 18 48 54;
+    --accent-soft-ink: 168 226 235;
+    --warn: 245 180 85;
+    --warn-soft: 52 34 14;
+    --danger: 255 138 128;
+    --danger-soft: 58 22 22;
+    --ok: 127 214 156;
+    --ok-soft: 19 36 26;
+    color-scheme: dark;
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-bg text-ink font-sans antialiased;
+    overscroll-behavior-y: none;
+  }
+  /* 16 px minimum : empêche le zoom automatique de Safari à la saisie. */
+  input, textarea, select {
+    font-size: 16px;
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface rounded-card shadow-[0_1px_2px_rgba(16,24,32,0.06)];
+  }
+  .section-title {
+    @apply text-[13px] font-semibold uppercase tracking-[0.06em] text-muted;
+  }
+  .pt-safe {
+    padding-top: max(env(safe-area-inset-top), 12px);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
