@@ -8,6 +8,8 @@ import type {
   Onboarding, OnboardingTask, OnboardingTemplate, Skill, Training,
 } from './types';
 import { DEFAULT_TEMPLATE_ID, genericTemplate, instantiateOnboarding } from '../domain/onboarding';
+import { demoSnapshot, isDemoId } from '../domain/demo';
+import { addDaysISO } from '../domain/dates';
 import { planDebrief, type DebriefInput } from '../domain/meetingPrep';
 
 export const newId = (): string => crypto.randomUUID();
@@ -314,5 +316,56 @@ export async function deleteOnboarding(id: string, d: CarnetDB = defaultDb) {
     if (!o) return;
     await d.meetings.where('collaboratorId').equals(o.collaboratorId).filter((m) => m.kind === 'onboarding' && m.status === 'planned').delete();
     await d.onboardings.delete(id);
+  });
+}
+
+// --- Annuler, repousser --------------------------------------------------------
+
+/** Remet une entrée exactement dans l'état fourni (sert à « Annuler »). */
+export async function restoreEntry(snapshot: Entry, d: CarnetDB = defaultDb) {
+  await d.entries.put({ ...snapshot, updatedAt: now() });
+}
+
+/** Repousse l'échéance d'un engagement (par défaut d'une semaine à partir d'aujourd'hui ou de l'échéance). */
+export async function snoozeEntry(id: string, days = 7, d: CarnetDB = defaultDb) {
+  const e = await d.entries.get(id);
+  if (!e) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const from = e.dueDate && e.dueDate > today ? e.dueDate : today;
+  await d.entries.put({ ...e, dueDate: addDaysISO(from, days), updatedAt: now() });
+}
+
+// --- Suppression définitive et données d'exemple ---------------------------------
+
+const PER_COLLABORATOR = ['entries', 'meetings', 'objectives', 'skills', 'developmentPlans', 'onboardings'] as const;
+
+/** Efface définitivement un collaborateur et tout ce qui le concerne (droit à l'effacement). */
+export async function deleteCollaboratorForever(id: string, d: CarnetDB = defaultDb) {
+  await d.transaction('rw', [d.collaborators, ...PER_COLLABORATOR.map((t) => d.table(t))], async () => {
+    for (const t of PER_COLLABORATOR) await d.table(t).where('collaboratorId').equals(id).delete();
+    await d.collaborators.delete(id);
+  });
+}
+
+export async function loadDemoData(d: CarnetDB = defaultDb) {
+  const s = demoSnapshot(new Date().toISOString().slice(0, 10));
+  await d.transaction('rw', [d.collaborators, ...PER_COLLABORATOR.map((t) => d.table(t))], async () => {
+    await d.collaborators.bulkPut(s.collaborators);
+    for (const t of PER_COLLABORATOR) await d.table(t).bulkPut(s[t] as unknown[]);
+  });
+}
+
+export async function hasDemoData(d: CarnetDB = defaultDb): Promise<boolean> {
+  return (await d.collaborators.filter((c) => isDemoId(c.id)).count()) > 0;
+}
+
+/** Retire toutes les données d'exemple (et ce qui a été noté sur les collaborateurs d'exemple). */
+export async function removeDemoData(d: CarnetDB = defaultDb) {
+  const ids = (await d.collaborators.filter((c) => isDemoId(c.id)).toArray()).map((c) => c.id);
+  await d.transaction('rw', [d.collaborators, ...PER_COLLABORATOR.map((t) => d.table(t))], async () => {
+    for (const t of PER_COLLABORATOR) {
+      await d.table(t).filter((r: { id: string; collaboratorId: string }) => isDemoId(r.id) || ids.includes(r.collaboratorId)).delete();
+    }
+    await d.collaborators.bulkDelete(ids);
   });
 }
