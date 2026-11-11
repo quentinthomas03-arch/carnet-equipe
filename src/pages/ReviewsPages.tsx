@@ -9,6 +9,8 @@ import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
 import { BackupBanner } from '../components/BackupBanner';
 import { DocumentView, PeriodPicker, ReviewActions, usePeriod, useReviewSource } from '../components/ReviewParts';
+import { SETTING, setSetting, useSetting } from '../db/settings';
+import { CAMPAIGN_LABELS, CAMPAIGN_ORDER, campaignProgress, campaignStatus, setCampaignStatus, type Campaign, type CampaignStatus } from '../domain/campaign';
 
 const slug = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase();
 
@@ -16,7 +18,9 @@ const slug = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/
 export function ReviewsPage() {
   const src = useReviewSource();
   const [period, setPeriod] = usePeriod();
+  const campaign = useSetting<Campaign | undefined>(SETTING.reviewCampaign, undefined);
   if (!src) return null;
+  const year = period.end.slice(0, 4);
   const qs = `?du=${period.start}&au=${period.end}`;
   const active = src.collaborators.filter((c) => !c.archivedAt).sort((a, b) => a.firstName.localeCompare(b.firstName, 'fr'));
   const archived = src.collaborators.filter((c) => c.archivedAt && c.archivedAt.slice(0, 10) >= period.start);
@@ -36,14 +40,29 @@ export function ReviewsPage() {
           <Icon name="chevron" size={18} className="text-muted" />
         </Link>
         <section className="flex flex-col gap-2">
-          <h2 className="section-title px-1">Bilan d'entretien annuel</h2>
+          <div className="flex items-baseline justify-between px-1">
+            <h2 className="section-title">Entretiens annuels {year}</h2>
+            {active.length > 0 && (() => {
+              const p = campaignProgress(campaign, year, active.map((c) => c.id));
+              return <span className="text-[13px] text-muted">{p.done} / {p.total} réalisés</span>;
+            })()}
+          </div>
           {active.length === 0 && <p className="card p-5 text-[15px] text-muted">Aucun collaborateur.</p>}
           {[...active, ...archived].map((c) => (
-            <Link key={c.id} to={`/bilans/${c.id}${qs}`} className="card p-3 flex items-center gap-3 active:opacity-80">
-              <Avatar firstName={c.firstName} lastName={c.lastName} color={c.color} size={36} />
-              <span className="flex-1 font-medium">{c.firstName} {c.lastName}{c.archivedAt ? <span className="text-muted font-normal"> · archivé·e</span> : null}</span>
-              <Icon name="chevron" size={18} className="text-muted" />
-            </Link>
+            <div key={c.id} className="card p-3 flex items-center gap-3">
+              <Link to={`/bilans/${c.id}${qs}`} className="flex-1 min-w-0 flex items-center gap-3 active:opacity-80">
+                <Avatar firstName={c.firstName} lastName={c.lastName} color={c.color} size={36} />
+                <span className="flex-1 min-w-0 font-medium truncate">{c.firstName} {c.lastName}{c.archivedAt ? <span className="text-muted font-normal"> · archivé·e</span> : null}</span>
+              </Link>
+              <select
+                aria-label={`Avancement de l'entretien de ${c.firstName}`}
+                value={campaignStatus(campaign, year, c.id)}
+                onChange={(e) => setSetting(SETTING.reviewCampaign, setCampaignStatus(campaign, year, c.id, e.target.value as CampaignStatus))}
+                className={`min-h-[36px] max-w-[132px] rounded-xl px-2 text-[13px] font-semibold ${({ todo: 'bg-surface-2 text-muted', ready: 'bg-accent-soft text-accent-soft-ink', done: 'bg-ok-soft text-ok', signed: 'bg-ok text-surface' } as const)[campaignStatus(campaign, year, c.id)]}`}
+              >
+                {CAMPAIGN_ORDER.map((s) => <option key={s} value={s}>{CAMPAIGN_LABELS[s]}</option>)}
+              </select>
+            </div>
           ))}
         </section>
       </div>
