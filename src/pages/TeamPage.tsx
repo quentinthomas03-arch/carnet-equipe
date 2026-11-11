@@ -11,6 +11,33 @@ import { BackupBanner } from '../components/BackupBanner';
 import { CollaboratorCard } from '../components/CollaboratorCard';
 import { CollaboratorForm } from '../components/CollaboratorForm';
 import { useToast } from '../ui/Toast';
+import { loadDemoData } from '../db/repo';
+import { isDemoId } from '../domain/demo';
+
+/** Trois indicateurs colorés en tête d'écran, chacun menant à la liste correspondante. */
+function TeamPulse({ active }: { active: import('../domain/cadence').CollaboratorSummary[] }) {
+  const due = active.filter((s) => s.schedule.daysUntil <= 3).length;
+  const late = active.reduce((n, s) => n + s.myLate, 0);
+  const topics = active.reduce((n, s) => n + s.topics, 0);
+  const tiles = [
+    { to: '/points', value: due, label: 'Points à faire', icon: 'meetings' as const, tone: due ? 'bg-warn-soft text-warn' : 'bg-surface-2 text-muted' },
+    { to: '/engagements', value: late, label: 'Mes retards', icon: 'check' as const, tone: late ? 'bg-danger-soft text-danger' : 'bg-ok-soft text-ok' },
+    { to: '/a-aborder', value: topics, label: 'À aborder', icon: 'today' as const, tone: 'bg-accent-soft text-accent-soft-ink' },
+  ];
+  return (
+    <div className="grid grid-cols-3 gap-2 px-4 pb-3">
+      {tiles.map((t) => (
+        <Link key={t.to} to={t.to} className="card p-3 flex flex-col gap-2 active:opacity-80" aria-label={`${t.value} ${t.label}`}>
+          <span className="flex items-center justify-between">
+            <span className="text-[24px] font-extrabold leading-none">{t.value}</span>
+            <span className={`w-8 h-8 rounded-full flex items-center justify-center ${t.tone}`}><Icon name={t.icon} size={17} strokeWidth={2.2} /></span>
+          </span>
+          <span className="text-[13px] text-muted leading-tight">{t.label}</span>
+        </Link>
+      ))}
+    </div>
+  );
+}
 
 type Filter = { kind: 'site' | 'activity'; value: string } | null;
 
@@ -39,6 +66,9 @@ export function TeamPage() {
         subtitle={subtitle}
         action={
           <div className="flex gap-2">
+            <Link to="/recherche" aria-label="Rechercher" className="w-11 h-11 rounded-full bg-surface-2 text-ink flex items-center justify-center">
+              <Icon name="search" size={22} />
+            </Link>
             <button type="button" onClick={() => setAdding(true)} aria-label="Ajouter un collaborateur" className="w-11 h-11 rounded-full bg-surface-2 text-ink flex items-center justify-center">
               <Icon name="userPlus" size={22} />
             </button>
@@ -49,6 +79,8 @@ export function TeamPage() {
         }
       />
 
+      {active.length > 0 && <TeamPulse active={active} />}
+
       {sites.length + activities.length > 1 && (
         <div className="flex gap-2 px-4 pb-3 overflow-x-auto" role="group" aria-label="Filtrer">
           <Chip selected={!filter} onClick={() => setFilter(null)}>Tous</Chip>
@@ -58,12 +90,21 @@ export function TeamPage() {
       )}
 
       <BackupBanner />
+      {active.some((s) => isDemoId(s.collaborator.id)) && (
+        <Link to="/reglages" className="mx-4 mb-3 rounded-2xl bg-warn-soft text-warn px-4 py-3 text-[14px] leading-snug flex items-center gap-2">
+          <Icon name="info" size={20} />
+          <span className="flex-1"><strong>Données d'exemple affichées.</strong> À retirer dans les Réglages quand tu as fini d'essayer.</span>
+        </Link>
+      )}
 
       {team && active.length === 0 && (
         <section className="card mx-4 p-6 flex flex-col items-center text-center gap-3">
           <p className="text-[17px] font-semibold">Ton équipe est vide</p>
           <p className="text-[15px] text-muted leading-snug">Ajoute tes collaborateurs : seul le prénom est obligatoire.</p>
           <Button onClick={() => setAdding(true)}><Icon name="userPlus" size={20} /> Ajouter un collaborateur</Button>
+          <button type="button" onClick={() => loadDemoData().then(() => toast('Données d’exemple chargées'))} className="min-h-[44px] text-[15px] font-medium text-accent">
+            Ou essayer avec des données d'exemple
+          </button>
         </section>
       )}
 

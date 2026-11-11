@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useCollaborator } from '../db/hooks';
-import { setArchived, updateCollaborator } from '../db/repo';
+import { deleteCollaboratorForever, setArchived, updateCollaborator } from '../db/repo';
 import type { Entry, EntryType } from '../db/types';
 import { cadenceLabel } from '../domain/cadence';
 import { ENTRY_LABELS, ENTRY_TYPES, isPending } from '../domain/entries';
@@ -144,7 +144,7 @@ function Overview({ data }: { data: NonNullable<ReturnType<typeof useCollaborato
       <NextMeeting summary={summary} />
       <Section title="À aborder" count={of('topic').length}>
         <List entries={of('topic')} empty="Rien en attente. Note un sujet avec le +." />
-        {of('topic').length > 0 && <p className="text-[12px] text-muted px-1">Glisse vers la droite : abordé · vers la gauche : reporté.</p>}
+        {of('topic').length > 0 && <p className="text-[12px] text-muted px-1">Glisse à droite : abordé · à gauche : reporté. Un « Annuler » apparaît en haut.</p>}
       </Section>
       <Section title="Mes engagements" count={of('myCommitment').length}>
         <List entries={of('myCommitment')} empty="Aucun engagement de ma part en cours." />
@@ -259,7 +259,12 @@ function ArchiveButton({ id, firstName, archived }: { id: string; firstName: str
   const toast = useToast();
   const navigate = useNavigate();
   if (archived)
-    return <Button variant="secondary" className="mt-6" onClick={() => setArchived(id, false).then(() => toast(`${firstName} réactivé·e`))}>Réactiver {firstName}</Button>;
+    return (
+      <div className="mt-6 flex flex-col gap-2">
+        <Button variant="secondary" onClick={() => setArchived(id, false).then(() => toast(`${firstName} réactivé·e`))}>Réactiver {firstName}</Button>
+        <EraseForever id={id} firstName={firstName} />
+      </div>
+    );
   return (
     <div className="mt-6 flex flex-col gap-2">
       {!confirm ? (
@@ -273,6 +278,36 @@ function ArchiveButton({ id, firstName, archived }: { id: string; firstName: str
           <Button variant="ghost" onClick={() => setConfirm(false)}>Annuler</Button>
         </>
       )}
+    </div>
+  );
+}
+
+/**
+ * Effacement définitif (droit à l'effacement, départ de l'entreprise) : disponible seulement
+ * sur une fiche archivée, avec saisie du prénom pour confirmer. Irréversible.
+ */
+function EraseForever({ id, firstName }: { id: string; firstName: string }) {
+  const [open, setOpen] = useState(false);
+  const [typed, setTyped] = useState('');
+  const toast = useToast();
+  const navigate = useNavigate();
+  if (!open)
+    return <Button variant="ghost" className="text-danger" onClick={() => setOpen(true)}>Supprimer définitivement…</Button>;
+  const ok = typed.trim().toLowerCase() === firstName.trim().toLowerCase();
+  return (
+    <div className="card p-4 flex flex-col gap-3">
+      <p className="text-[14px] leading-snug">
+        Toutes les données de <strong>{firstName}</strong> (entrées, points, objectifs, compétences, évolution, onboarding) seront
+        effacées de ce téléphone. <strong>C'est irréversible</strong>, sauf à réimporter une ancienne sauvegarde. Exporte d'abord si besoin.
+      </p>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-[14px]">Pour confirmer, tape le prénom « {firstName} »</span>
+        <input value={typed} onChange={(e) => setTyped(e.target.value)} autoCapitalize="words" autoComplete="off" className="min-h-[44px] rounded-xl bg-surface-2 px-3" />
+      </label>
+      <Button variant="danger" disabled={!ok} onClick={() => deleteCollaboratorForever(id).then(() => { toast(`Données de ${firstName} supprimées`); navigate('/', { replace: true }); })}>
+        Supprimer définitivement
+      </Button>
+      <Button variant="ghost" onClick={() => { setOpen(false); setTyped(''); }}>Annuler</Button>
     </div>
   );
 }

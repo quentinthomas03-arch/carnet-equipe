@@ -4,6 +4,7 @@ import type { Onboarding } from '../db/types';
 import { OnboardingBar } from './OnboardingTab';
 import { formatShort } from '../domain/dates';
 import { Avatar } from '../ui/Avatar';
+import { colorHex } from '../ui/palette';
 import { Tag } from '../ui/Chip';
 
 /** Statut du prochain point, sous forme d'étiquette. */
@@ -19,7 +20,8 @@ export function CollaboratorCard({ s, onboarding }: { s: CollaboratorSummary; on
   const c = s.collaborator;
   const meta = [c.role, c.site].filter(Boolean).join(' · ');
   return (
-    <Link to={`/c/${c.id}`} className="card p-4 flex flex-col gap-3 active:opacity-80">
+    <Link to={`/c/${c.id}`} className="card relative overflow-hidden p-4 pl-5 flex flex-col gap-3 active:opacity-80">
+      <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-1" style={{ background: colorHex(c.color) }} />
       <div className="flex items-center gap-3">
         <Avatar firstName={c.firstName} lastName={c.lastName} color={c.color} />
         <div className="flex-1 min-w-0">
