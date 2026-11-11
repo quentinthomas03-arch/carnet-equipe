@@ -71,13 +71,18 @@ function QuickAddSheet({ preset, onClose }: { preset: Preset; onClose: () => voi
     setWho((w) => (w.includes(id) ? w.filter((x) => x !== id) : [...w, id]));
   }
 
-  async function save() {
+  /** `again` : enregistre puis garde la feuille ouverte (même collaborateur, même type) pour noter la suite. */
+  async function save(again = false) {
     if (!canSave) return;
     await createEntries({ collaboratorIds: who, type, text, dueDate: due || undefined });
     await setSetting(SETTING.lastQuickAdd, { collaboratorIds: who, type } satisfies LastQuickAdd);
     const names = who.map((id) => (id === TEAM_ID ? "l'équipe" : sorted.find((c) => c.id === id)?.firstName)).join(', ');
     toast(`Noté pour ${names}`);
-    onClose();
+    if (again) {
+      setText('');
+      setDue('');
+      textRef.current?.focus();
+    } else onClose();
   }
 
   return (
@@ -86,7 +91,7 @@ function QuickAddSheet({ preset, onClose }: { preset: Preset; onClose: () => voi
       onClose={onClose}
       title="Noter vite"
       action={
-        <button type="button" onClick={save} disabled={!canSave} className="min-h-[40px] px-4 rounded-full bg-accent text-accent-ink font-semibold disabled:opacity-40">
+        <button type="button" onClick={() => save()} disabled={!canSave} className="min-h-[40px] px-4 rounded-full bg-accent text-accent-ink font-semibold disabled:opacity-40">
           Noter
         </button>
       }
@@ -129,9 +134,14 @@ function QuickAddSheet({ preset, onClose }: { preset: Preset; onClose: () => voi
           <textarea id="quick-text" ref={textRef} value={text} onChange={(e) => setText(e.target.value)} rows={4}
             placeholder="Quoi ?" enterKeyHint="done"
             className="w-full rounded-2xl bg-surface-2 p-4 text-[17px] leading-snug resize-none placeholder:text-muted" />
-          <p className="flex items-center gap-1.5 text-[13px] text-muted">
-            <Icon name="mic" size={16} /> Pour dicter, touche le micro du clavier.
-          </p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="flex items-center gap-1.5 text-[13px] text-muted">
+              <Icon name="mic" size={16} /> Pour dicter, touche le micro du clavier.
+            </p>
+            <button type="button" onClick={() => save(true)} disabled={!canSave} className="min-h-[36px] px-3 rounded-full bg-surface-2 text-[14px] font-semibold disabled:opacity-40 shrink-0">
+              Noter + autre
+            </button>
+          </div>
         </div>
 
         <fieldset className="flex flex-col gap-2">
