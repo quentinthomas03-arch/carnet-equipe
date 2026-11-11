@@ -94,7 +94,7 @@ describe('débrief', () => {
 
     const c = (await d.collaborators.get(cid))!;
     expect(c.nextMeetingDate).toBeUndefined();
-    expect(meetingSchedule(c, [m], '2026-11-12').next).toBe('2026-12-12');
+    expect(meetingSchedule(c, [m], '2026-11-12').next).toBe('2026-12-14'); // 12 décembre = samedi
   });
 
   it('garde la date du prochain point choisie au débrief', async () => {

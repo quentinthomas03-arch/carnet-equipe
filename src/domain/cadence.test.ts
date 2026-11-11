@@ -9,13 +9,13 @@ const meeting = (date: string, status: 'done' | 'planned' = 'done', id = date): 
 });
 
 describe('rythme des points', () => {
-  it('prochain point = dernier point + rythme', () => {
+  it('prochain point = dernier point + rythme (décalé au lundi si week-end)', () => {
     const s = meetingSchedule(collaborator({ cadenceDays: 30 }), [meeting('2026-10-02'), meeting('2026-09-01')], '2026-11-10');
     expect(s.last).toBe('2026-10-02');
-    expect(s.next).toBe('2026-11-01');
+    expect(s.next).toBe('2026-11-02'); // 1er novembre = dimanche
     expect(s.suggested).toBe(true);
     expect(s.overdue).toBe(true);
-    expect(s.daysUntil).toBe(-9);
+    expect(s.daysUntil).toBe(-8);
   });
 
   it('ignore les points seulement planifiés pour le « dernier point »', () => {
@@ -24,7 +24,7 @@ describe('rythme des points', () => {
 
   it('sans point : part de la date d’arrivée, sinon de la création de la fiche', () => {
     expect(meetingSchedule(collaborator({ arrivalDate: '2026-11-02', cadenceDays: 14 }), [], '2026-11-10').next).toBe('2026-11-16');
-    expect(meetingSchedule(collaborator({ createdAt: '2026-11-05T10:00:00Z', cadenceDays: 30 }), [], '2026-11-10').next).toBe('2026-12-05');
+    expect(meetingSchedule(collaborator({ createdAt: '2026-11-05T10:00:00Z', cadenceDays: 30 }), [], '2026-11-10').next).toBe('2026-12-07'); // 5 décembre = samedi
   });
 
   it('collaborateur ancien ajouté récemment : part de la création de la fiche', () => {
