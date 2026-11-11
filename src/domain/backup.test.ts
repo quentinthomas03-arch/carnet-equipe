@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildExport, checkImport, ImportError, mergeSnapshots, stableStringify } from './backup';
+import { buildExport, mergeSnapshots, stableStringify } from './backup';
+import { checkImport, ImportError } from './backupImport';
 import { richSnapshot, collaborator, entry } from '../test/fixtures';
 import { emptySnapshot } from '../db/types';
 import { migrateData, SCHEMA_VERSION } from '../db/migrations';
