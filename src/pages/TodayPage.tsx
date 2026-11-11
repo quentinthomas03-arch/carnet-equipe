@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTeam } from '../db/hooks';
 import type { Entry } from '../db/types';
 import { buildToday } from '../domain/today';
-import { formatLong, formatShort, todayISO } from '../domain/dates';
+import { formatShort, todayISO } from '../domain/dates';
 import { isPending } from '../domain/entries';
 import { addDaysISO } from '../domain/dates';
 import { toggleOnboardingTask } from '../db/repo';
@@ -38,7 +38,7 @@ export function TodayPage() {
 
   return (
     <>
-      <PageHeader title="Aujourd'hui" subtitle={formatLong(today).replace(/^./, (c) => c.toUpperCase())} />
+      <PageHeader title="Aujourd'hui" />
       <BackupBanner />
       <div className="px-4 flex flex-col gap-5">
         <div className="grid grid-cols-2 gap-3">

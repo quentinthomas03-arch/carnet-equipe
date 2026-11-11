@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { Entry } from '../db/types';
 import { daysLate, dueState } from '../domain/entries';
@@ -9,6 +10,15 @@ import { useQuickAdd } from '../components/QuickAdd';
 import { usePrep } from '../components/usePrep';
 
 const OBJ_CATEGORY: Record<string, string> = { securite: 'Sécurité', qualite: 'Qualité', metier: 'Métier', production: 'Production', autre: 'Autre' };
+
+/** Mode écran partagé (mémorisé sur l'appareil) : pour montrer l'écran pendant l'entretien. */
+function readShared(): boolean {
+  try {
+    return localStorage.getItem('carnet:sharedScreen') === '1';
+  } catch {
+    return false;
+  }
+}
 
 /** Ligne cochable : sert pendant le point pour suivre la discussion. */
 function CheckRow({ entry, checked, onToggle, tag }: { entry: Entry; checked: boolean; onToggle: () => void; tag?: React.ReactNode }) {
@@ -56,6 +66,16 @@ export function PrepPage() {
   const navigate = useNavigate();
   const quickAdd = useQuickAdd();
   const { data, prep, checked, toggle } = usePrep(id);
+  const [shared, setShared] = useState(readShared);
+  const toggleShared = () => {
+    const v = !shared;
+    setShared(v);
+    try {
+      localStorage.setItem('carnet:sharedScreen', v ? '1' : '0');
+    } catch {
+      /* préférence non mémorisée */
+    }
+  };
   if (!data || !prep) return data === null ? <p className="pt-safe p-6">Collaborateur introuvable.</p> : null;
 
   const c = data.summary.collaborator;
@@ -73,11 +93,20 @@ export function PrepPage() {
           <Icon name="back" size={24} strokeWidth={2.2} />
         </button>
         <Avatar firstName={c.firstName} lastName={c.lastName} color={c.color} size={34} />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h1 className="text-[17px] font-semibold truncate">{c.firstName} {c.lastName}</h1>
           <p className="text-[13px] text-muted">{s.plannedLabel ?? 'Préparer le point'} · {formatLong(s.next)}</p>
         </div>
+        <button type="button" onClick={toggleShared} aria-pressed={shared} aria-label="Mode écran partagé : masquer les alertes et mes notes"
+          className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 ${shared ? 'bg-accent text-accent-ink' : 'bg-surface-2 text-muted'}`}>
+          <Icon name="eyeOff" size={20} />
+        </button>
       </header>
+      {shared && (
+        <p className="mx-4 mb-3 rounded-2xl bg-accent-soft text-accent-soft-ink px-4 py-2.5 text-[14px] leading-snug">
+          Mode écran partagé : alertes et notes personnelles masquées. Touche l'œil pour les réafficher.
+        </p>
+      )}
 
       <div className="px-4 flex flex-col gap-3">
         {prep.leftOver.length > 0 && (
@@ -101,7 +130,7 @@ export function PrepPage() {
         )}
 
         {prep.successes.length > 0 && <Block title="Réussites à féliciter" tone="bg-ok-soft">{rows(prep.successes)}</Block>}
-        {prep.alerts.length > 0 && <Block title="Points d'alerte" tone="bg-warn-soft">{rows(prep.alerts)}</Block>}
+        {!shared && prep.alerts.length > 0 && <Block title="Points d'alerte" tone="bg-warn-soft">{rows(prep.alerts)}</Block>}
 
         {prep.objectives.length > 0 && (
           <Block title="Objectifs en cours">
@@ -120,8 +149,8 @@ export function PrepPage() {
         {prep.lastMeeting && (
           <Block title={`Dernier point · ${formatShort(prep.lastMeeting.date)}`}>
             {prep.lastMeeting.decisions && <p className="text-[15px] leading-snug whitespace-pre-line"><strong>Décisions :</strong> {prep.lastMeeting.decisions}</p>}
-            {prep.lastMeeting.note && <p className="text-[15px] leading-snug whitespace-pre-line text-muted">{prep.lastMeeting.note}</p>}
-            {prep.lastMeeting.workload && <p className="text-[14px] text-muted">{WORKLOAD_LABELS[prep.lastMeeting.workload]}</p>}
+            {!shared && prep.lastMeeting.note && <p className="text-[15px] leading-snug whitespace-pre-line text-muted">{prep.lastMeeting.note}</p>}
+            {!shared && prep.lastMeeting.workload && <p className="text-[14px] text-muted">{WORKLOAD_LABELS[prep.lastMeeting.workload]}</p>}
             {!prep.lastMeeting.decisions && !prep.lastMeeting.note && <p className="text-[14px] text-muted">Pas de note.</p>}
           </Block>
         )}

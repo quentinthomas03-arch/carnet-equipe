@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { CarnetDB } from './db';
 import { meetingSchedule } from '../domain/cadence';
+import { deleteCollaboratorForever, hasDemoData, loadDemoData, removeDemoData, restoreEntry, snoozeEntry } from './repo';
 import { saveDebrief, startOnboarding, toggleOnboardingTask, deleteOnboarding, addSkills, saveDevelopmentPlan, ensureOnboardingTemplate, createCollaborator, createEntries, postponeEntry, reopenEntry, resolveEntry, setArchived, updateEntry } from './repo';
 
 let n = 0;
@@ -94,7 +95,7 @@ describe('débrief', () => {
 
     const c = (await d.collaborators.get(cid))!;
     expect(c.nextMeetingDate).toBeUndefined();
-    expect(meetingSchedule(c, [m], '2026-11-12').next).toBe('2026-12-12');
+    expect(meetingSchedule(c, [m], '2026-11-12').next).toBe('2026-12-14'); // 12 décembre = samedi
   });
 
   it('garde la date du prochain point choisie au débrief', async () => {
@@ -143,5 +144,52 @@ describe('onboarding (base)', () => {
     const plans = await d.developmentPlans.toArray();
     expect(plans).toHaveLength(1);
     expect(plans[0]).toMatchObject({ wishes: 'Référent aération', mobility: 'Non' });
+  });
+});
+
+
+describe('phase 5 (base)', () => {
+  it('annuler restaure l’état exact', async () => {
+    const [id] = await createEntries({ collaboratorIds: ['c1'], type: 'topic', text: 'x' }, d);
+    const before = (await d.entries.get(id))!;
+    await postponeEntry(id, d);
+    await restoreEntry(before, d);
+    expect((await d.entries.get(id))!.postponeCount).toBe(0);
+  });
+
+  it('repousser d’une semaine (depuis aujourd’hui si l’échéance est passée)', async () => {
+    const [id] = await createEntries({ collaboratorIds: ['c1'], type: 'myCommitment', text: 'x', dueDate: '2000-01-01' }, d);
+    await snoozeEntry(id, 7, d);
+    const due = (await d.entries.get(id))!.dueDate!;
+    expect(due > new Date().toISOString().slice(0, 10)).toBe(true);
+  });
+
+  it('suppression définitive : rien ne reste du collaborateur', async () => {
+    const cid = await createCollaborator(base, d);
+    const other = await createCollaborator(base, d);
+    await createEntries({ collaboratorIds: [cid, other], type: 'topic', text: 'x' }, d);
+    await addSkills(cid, ['Rigueur'], d);
+    await saveDevelopmentPlan(cid, { wishes: 'x' }, d);
+    await deleteCollaboratorForever(cid, d);
+    expect(await d.collaborators.get(cid)).toBeUndefined();
+    expect((await d.entries.toArray()).map((e) => e.collaboratorId)).toEqual([other]);
+    expect(await d.skills.count()).toBe(0);
+    expect(await d.developmentPlans.count()).toBe(0);
+  });
+
+  it('données d’exemple : chargement puis retrait sans toucher aux vraies données', async () => {
+    const real = await createCollaborator(base, d);
+    await createEntries({ collaboratorIds: [real], type: 'topic', text: 'vrai' }, d);
+    await loadDemoData(d);
+    expect(await hasDemoData(d)).toBe(true);
+    expect(await d.collaborators.count()).toBe(5);
+    const demoId = (await d.collaborators.toArray()).find((c) => c.id.startsWith('demo-'))!.id;
+    await createEntries({ collaboratorIds: [demoId], type: 'topic', text: 'ajouté pendant l’essai' }, d);
+    await removeDemoData(d);
+    expect(await hasDemoData(d)).toBe(false);
+    expect((await d.collaborators.toArray()).map((c) => c.id)).toEqual([real]);
+    expect((await d.entries.toArray()).map((e) => e.text)).toEqual(['vrai']);
+    expect(await d.meetings.count()).toBe(0);
+    expect(await d.onboardings.count()).toBe(0);
   });
 });

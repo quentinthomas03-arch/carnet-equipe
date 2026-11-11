@@ -18,6 +18,12 @@ export function parseDate(d: DateISO): Date {
   return parseISO(d);
 }
 
+/** Décale un samedi ou un dimanche au lundi suivant (jours ouvrés). */
+export function toWeekday(d: DateISO): DateISO {
+  const day = parseISO(d).getDay();
+  return day === 6 ? addDaysISO(d, 2) : day === 0 ? addDaysISO(d, 1) : d;
+}
+
 export function addDaysISO(d: DateISO, days: number): DateISO {
   return toDateISO(addDays(parseISO(d), days));
 }

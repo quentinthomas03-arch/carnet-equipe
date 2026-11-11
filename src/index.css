@@ -27,8 +27,9 @@
   color-scheme: light;
 }
 
+/* Sombre : automatique (réglage de l'iPhone) sauf si « clair » est forcé dans les réglages… */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --bg: 14 17 20;
     --surface: 23 27 32;
     --surface-2: 30 35 41;
@@ -47,6 +48,32 @@
     --ok-soft: 19 36 26;
     color-scheme: dark;
   }
+}
+/* …ou forcé « sombre ». */
+:root[data-theme='dark'] {
+    --bg: 14 17 20;
+    --surface: 23 27 32;
+    --surface-2: 30 35 41;
+    --line: 38 44 51;
+    --ink: 232 236 240;
+    --muted: 154 164 175;
+    --accent: 92 194 211;
+    --accent-ink: 6 41 44;
+    --accent-soft: 18 48 54;
+    --accent-soft-ink: 168 226 235;
+    --warn: 245 180 85;
+    --warn-soft: 52 34 14;
+    --danger: 255 138 128;
+    --danger-soft: 58 22 22;
+    --ok: 127 214 156;
+    --ok-soft: 19 36 26;
+    color-scheme: dark;
+  }
+
+/* Texte plus grand (option des réglages) : Safari agrandit le texte sans toucher à la mise en page. */
+html[data-text='large'] {
+  -webkit-text-size-adjust: 115%;
+  text-size-adjust: 115%;
 }
 
 @layer base {
@@ -70,7 +97,7 @@
 
 @layer components {
   .card {
-    @apply bg-surface rounded-card shadow-[0_1px_2px_rgba(16,24,32,0.06)];
+    @apply bg-surface rounded-card border border-line/70 shadow-[0_1px_2px_rgba(16,24,32,0.05),0_4px_12px_-6px_rgba(16,24,32,0.08)];
   }
   .section-title {
     @apply text-[13px] font-semibold uppercase tracking-[0.06em] text-muted;

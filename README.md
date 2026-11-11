@@ -118,6 +118,19 @@ charge de travail, compétences, évolution et formations.
 - **Année de mon équipe** : arrivées, onboardings, régularité des points, tenue de tes engagements,
   réussites collectives et individuelles, progression de chacun : la matière de ton dossier de chef de groupe.
 
+### Astuces
+
+- **Annuler** : après avoir glissé, traité, reporté ou supprimé une entrée, un bouton « Annuler » apparaît en haut quelques secondes.
+- **Glisser** : à droite = abordé / fait ; à gauche = reporté (sujet) ou échéance repoussée d'une semaine (engagement).
+- **Noter + autre** dans la saisie rapide : enchaîne plusieurs notes pour la même personne. Depuis une fiche, le « + » présélectionne ce collaborateur.
+- **Recherche** (loupe sur l'écran Équipe) : collaborateurs, entrées, décisions, objectifs, sans se soucier des accents.
+- **Mode écran partagé** (œil, dans « Préparer le point ») : masque alertes et notes personnelles si tu montres l'écran.
+- **Campagne d'entretiens** : dans Bilans, l'avancement de chaque entretien (à préparer, bilan prêt, fait, signé).
+- **Données d'exemple** (Réglages) : pour tout essayer, puis tout retirer en un tap sans toucher aux vraies données.
+- **Suppression définitive** d'un collaborateur parti : sur sa fiche archivée, en tapant son prénom pour confirmer.
+- **Apparence** (Réglages) : thème clair / sombre / auto et texte plus grand.
+- Le prochain point suggéré tombe toujours un jour ouvré ; un rappel de sauvegarde apparaît aussi après 50 modifications.
+
 ## 4. Limites de Safari sur iPhone
 
 - **Supprimer l'icône de l'écran d'accueil efface toutes les données** de l'appli.

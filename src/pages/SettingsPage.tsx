@@ -2,7 +2,12 @@ import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { checkImport, type ImportCheck } from '../domain/backup';
+import type { ImportCheck } from '../domain/backupImport';
+import { getTextSize, getTheme, setAppearance, type TextSize, type Theme } from '../lib/appearance';
+import { hasDemoData, loadDemoData, removeDemoData } from '../db/repo';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { Segmented } from '../ui/Segmented';
+import { useToast } from '../ui/Toast';
 import { mergeAll, replaceAll } from '../db/backupIO';
 import { SCHEMA_VERSION } from '../db/migrations';
 import { getStorageStatus, formatBytes, requestPersistence, type StorageStatus } from '../lib/storage';
@@ -84,6 +89,9 @@ export function SettingsPage() {
 
         <StorageSection storage={storage} onChange={setStorage} />
 
+        <AppearanceSection />
+        <DemoSection />
+
         <section className="card p-5 flex flex-col gap-3" aria-labelledby="s-sensitive">
           <h2 id="s-sensitive" className="section-title">Données sensibles</h2>
           <SensitiveDataText />
@@ -163,6 +171,8 @@ function ImportSection() {
     const f = e.target.files?.[0];
     if (!f) return;
     try {
+      // Le module de vérification (zod) n'est chargé qu'au moment d'un import.
+      const { checkImport } = await import('../domain/backupImport');
       setCheck(await checkImport(await f.text()));
     } catch (err) {
       setError((err as Error).message);
@@ -244,5 +254,42 @@ function UpdateButton() {
     <Button variant="secondary" className="w-full mt-3" onClick={check} disabled={state === 'checking'}>
       {state === 'checking' ? 'Recherche…' : 'Rechercher une mise à jour'}
     </Button>
+  );
+}
+
+function AppearanceSection() {
+  const [theme, setTheme] = useState<Theme>(getTheme());
+  const [text, setText] = useState<TextSize>(getTextSize());
+  return (
+    <section className="card p-5 flex flex-col gap-3" aria-labelledby="s-look">
+      <h2 id="s-look" className="section-title">Apparence (cet appareil)</h2>
+      <Segmented<Theme> label="Thème" value={theme} onChange={(t) => { setTheme(t); setAppearance(t, text); }}
+        options={[{ value: 'auto', label: 'Auto' }, { value: 'light', label: 'Clair' }, { value: 'dark', label: 'Sombre' }]} />
+      <Segmented<TextSize> label="Taille du texte" value={text} onChange={(x) => { setText(x); setAppearance(theme, x); }}
+        options={[{ value: 'normal', label: 'Texte normal' }, { value: 'large', label: 'Texte plus grand' }]} />
+    </section>
+  );
+}
+
+/** Données d'exemple : pour essayer toutes les fonctions sans mélanger avec les vraies. */
+function DemoSection() {
+  const toast = useToast();
+  const demo = useLiveQuery(() => hasDemoData(), []);
+  const [confirm, setConfirm] = useState(false);
+  return (
+    <section className="card p-5 flex flex-col gap-3" aria-labelledby="s-demo">
+      <h2 id="s-demo" className="section-title">Données d'exemple</h2>
+      <p className="text-[14px] text-muted leading-snug">
+        4 collaborateurs fictifs (« Exemple »), avec sujets, engagements, points, objectifs et une recrue en onboarding, pour tout essayer.
+        Ce que tu ajoutes sur eux disparaît aussi quand tu les retires ; tes vraies données ne sont jamais touchées.
+      </p>
+      {!demo ? (
+        <Button variant="secondary" onClick={() => loadDemoData().then(() => toast('Données d’exemple chargées'))}>Charger les données d'exemple</Button>
+      ) : !confirm ? (
+        <Button variant="secondary" onClick={() => setConfirm(true)}>Retirer les données d'exemple…</Button>
+      ) : (
+        <Button variant="danger" onClick={() => removeDemoData().then(() => { setConfirm(false); toast('Données d’exemple retirées'); })}>Confirmer le retrait</Button>
+      )}
+    </section>
   );
 }

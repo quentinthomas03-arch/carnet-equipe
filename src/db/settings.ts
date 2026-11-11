@@ -16,6 +16,8 @@ export const SETTING = {
   activities: 'activities',
   /** Référentiel de compétences proposé sur chaque fiche. */
   skillCatalog: 'skillCatalog',
+  /** Avancement de la campagne d'entretiens annuels, par année. */
+  reviewCampaign: 'reviewCampaign',
 } as const;
 
 /**

@@ -20,12 +20,18 @@ function Tab({ to, label, icon, badge }: (typeof TABS)[number] & { badge?: numbe
         `relative flex-1 min-h-[52px] flex flex-col items-center justify-center gap-0.5 text-[11px] ${isActive ? 'text-accent font-semibold' : 'text-muted font-medium'}`
       }
     >
-      <Icon name={icon} size={24} />
-      {label}
-      {!!badge && (
-        <span className="absolute top-0.5 left-1/2 ml-2 min-w-[18px] h-[18px] px-1 rounded-full bg-danger text-surface text-[11px] font-bold flex items-center justify-center" aria-label={`${badge} élément(s) urgent(s)`}>
-          {badge}
-        </span>
+      {({ isActive }: { isActive: boolean }) => (
+        <>
+          <span className={`w-14 h-8 rounded-full flex items-center justify-center transition-colors ${isActive ? 'bg-accent-soft' : ''}`}>
+            <Icon name={icon} size={23} />
+          </span>
+          {label}
+          {!!badge && (
+            <span className="absolute top-0.5 left-1/2 ml-2 min-w-[18px] h-[18px] px-1 rounded-full bg-danger text-surface text-[11px] font-bold flex items-center justify-center" aria-label={`${badge} élément(s) urgent(s)`}>
+              {badge}
+            </span>
+          )}
+        </>
       )}
     </NavLink>
   );

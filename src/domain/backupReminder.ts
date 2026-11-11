@@ -4,12 +4,16 @@
  * (pour ne pas réclamer un export le jour même de l'installation).
  */
 export const BACKUP_REMINDER_DAYS = 30;
+/** Au-delà de ce nombre de modifications depuis la dernière sauvegarde, on la recommande aussi. */
+export const BACKUP_REMINDER_CHANGES = 50;
 
 export interface BackupState {
   lastBackupAt?: string;
   firstUseAt?: string;
   /** Faux si la base est vide : rien à sauvegarder, pas de rappel. */
   hasData: boolean;
+  /** Nombre d'éléments créés ou modifiés depuis la dernière sauvegarde. */
+  changesSinceBackup?: number;
 }
 
 export function daysSince(iso: string, now: Date): number {
@@ -24,5 +28,5 @@ export function backupAgeDays(state: BackupState, now = new Date()): number | nu
 export function needsBackupReminder(state: BackupState, now = new Date()): boolean {
   if (!state.hasData) return false;
   const age = backupAgeDays(state, now);
-  return age === null || age > BACKUP_REMINDER_DAYS;
+  return age === null || age > BACKUP_REMINDER_DAYS || (state.changesSinceBackup ?? 0) >= BACKUP_REMINDER_CHANGES;
 }

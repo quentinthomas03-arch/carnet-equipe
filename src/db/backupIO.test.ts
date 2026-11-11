@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { CarnetDB } from './db';
 import { createExport, mergeAll, readSnapshot, replaceAll } from './backupIO';
-import { checkImport } from '../domain/backup';
+import { checkImport } from '../domain/backupImport';
 import { richSnapshot, collaborator } from '../test/fixtures';
 import { SETTING } from './settings';
 

@@ -2,7 +2,7 @@
  * Rythme des points individuels et priorité des collaborateurs.
  */
 import type { Collaborator, DateISO, Entry, Meeting } from '../db/types';
-import { addDaysISO, daysBetween, toDateISO } from './dates';
+import { addDaysISO, daysBetween, toDateISO, toWeekday } from './dates';
 import { dueState, isPending } from './entries';
 
 export const CADENCE_OPTIONS = [
@@ -51,7 +51,8 @@ export function meetingSchedule(c: Collaborator, meetings: Meeting[], today: Dat
   const validated = c.nextMeetingDate && (!last || c.nextMeetingDate > last) ? c.nextMeetingDate : undefined;
   const created = toDateISO(new Date(c.createdAt));
   const base = last ?? (c.arrivalDate && c.arrivalDate > created ? c.arrivalDate : created);
-  let next = validated ?? addDaysISO(base, c.cadenceDays);
+  // La date suggérée tombe toujours un jour ouvré (un samedi ou un dimanche passe au lundi).
+  let next = validated ?? toWeekday(addDaysISO(base, c.cadenceDays));
   let suggested = !validated;
   // Un point planifié (suivi d'onboarding) postérieur au dernier point et plus proche l'emporte.
   const planned = meetings
