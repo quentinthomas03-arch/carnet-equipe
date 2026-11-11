@@ -6,6 +6,9 @@ import { initSettings } from './db/settings';
 import { ensureOnboardingTemplate } from './db/repo';
 import { requestPersistence } from './lib/storage';
 import './index.css';
+import { applyAppearance } from './lib/appearance';
+
+applyAppearance();
 
 // Service worker : met l'appli en cache pour un fonctionnement 100 % hors ligne,
 // et installe silencieusement les nouvelles versions publiées (rechargement automatique).
