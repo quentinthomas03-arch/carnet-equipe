@@ -3,7 +3,8 @@ import type { Collaborator, Entry } from '../db/types';
 import { TEAM_ID } from '../db/types';
 import { ENTRY_SHORT, daysLate, dueState, isPending } from '../domain/entries';
 import { formatShort, todayISO } from '../domain/dates';
-import { postponeEntry, resolveEntry } from '../db/repo';
+import { postponeEntry, resolveEntry, restoreEntry, snoozeEntry } from '../db/repo';
+import { isCommitment } from '../domain/entries';
 import { useToast } from '../ui/Toast';
 import { Avatar, TeamAvatar } from '../ui/Avatar';
 import { SwipeRow } from './SwipeRow';
@@ -21,6 +22,11 @@ export function EntryRow({ entry, collaborator, showWho = false, showType = true
   const pending = isPending(entry);
   const due = dueState(entry, today);
   const who = entry.collaboratorId === TEAM_ID ? 'Équipe' : collaborator?.firstName ?? '—';
+  /** Applique l'action puis propose « Annuler » (restaure l'entrée telle qu'elle était). */
+  const withUndo = (action: () => Promise<void>, msg: string) => {
+    const before = { ...entry };
+    void action().then(() => toast(msg, { label: 'Annuler', run: () => restoreEntry(before) }));
+  };
 
   const body = (
     <button type="button" onClick={() => setOpen(true)} className="w-full text-left bg-surface px-4 py-3 flex gap-3 items-start min-h-[56px]">
@@ -48,9 +54,15 @@ export function EntryRow({ entry, collaborator, showWho = false, showType = true
       {pending ? (
         <SwipeRow
           rightLabel={RESOLVE_LABEL[entry.type]}
-          onSwipeRight={() => resolveEntry(entry.id).then(() => toast(`${RESOLVE_LABEL[entry.type]}`))}
-          leftLabel="Reporter"
-          onSwipeLeft={entry.type === 'topic' ? () => postponeEntry(entry.id).then(() => toast('Reporté au prochain point')) : undefined}
+          onSwipeRight={() => withUndo(() => resolveEntry(entry.id), RESOLVE_LABEL[entry.type])}
+          leftLabel={entry.type === 'topic' ? 'Reporter' : '+1 semaine'}
+          onSwipeLeft={
+            entry.type === 'topic'
+              ? () => withUndo(() => postponeEntry(entry.id), 'Reporté au prochain point')
+              : isCommitment(entry.type)
+                ? () => withUndo(() => snoozeEntry(entry.id, 7), 'Échéance repoussée d’une semaine')
+                : undefined
+          }
         >
           {body}
         </SwipeRow>

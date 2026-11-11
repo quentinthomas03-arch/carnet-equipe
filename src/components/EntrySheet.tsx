@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { TEAM_ID, type Entry, type EntryType } from '../db/types';
 import { ENTRY_LABELS, ENTRY_TYPES, isCommitment, isPending } from '../domain/entries';
-import { deleteEntry, dropEntry, postponeEntry, reopenEntry, resolveEntry, updateEntry } from '../db/repo';
+import { deleteEntry, dropEntry, postponeEntry, reopenEntry, resolveEntry, restoreEntry, snoozeEntry, updateEntry } from '../db/repo';
 import { Sheet } from '../ui/Sheet';
 import { Button } from '../ui/Button';
 import { useToast } from '../ui/Toast';
@@ -38,9 +38,11 @@ export function EntrySheet({ entry, open, onClose }: { entry: Entry; open: boole
     toast(who !== entry.collaboratorId ? 'Déplacé' : 'Modifié');
     onClose();
   }
+  /** Toutes les actions de la feuille proposent « Annuler » (y compris la suppression). */
   async function run(action: () => Promise<void>, msg: string) {
+    const before = { ...entry };
     await action();
-    toast(msg);
+    toast(msg, { label: 'Annuler', run: () => restoreEntry(before) });
     onClose();
   }
 
@@ -99,6 +101,7 @@ export function EntrySheet({ entry, open, onClose }: { entry: Entry; open: boole
             <>
               <Button onClick={() => run(() => resolveEntry(entry.id), RESOLVE_LABEL[entry.type])}>Marquer « {RESOLVE_LABEL[entry.type]} »</Button>
               {entry.type === 'topic' && <Button variant="secondary" onClick={() => run(() => postponeEntry(entry.id), 'Reporté')}>Reporter au prochain point</Button>}
+              {isCommitment(entry.type) && <Button variant="secondary" onClick={() => run(() => snoozeEntry(entry.id, 7), 'Échéance repoussée d’une semaine')}>Repousser d'une semaine</Button>}
               {isCommitment(entry.type) && <Button variant="secondary" onClick={() => run(() => dropEntry(entry.id), 'Abandonné')}>Abandonner cet engagement</Button>}
             </>
           ) : (

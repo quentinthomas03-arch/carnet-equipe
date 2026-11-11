@@ -18,7 +18,7 @@ export function TopicsPage() {
   return (
     <div className="pb-6">
       <BackHeader title="À aborder" />
-      <p className="px-5 pb-3 text-[14px] text-muted">Glisse vers la droite : abordé · vers la gauche : reporté.</p>
+      <p className="px-5 pb-3 text-[14px] text-muted">Glisse à droite : abordé · à gauche : reporté. Un « Annuler » apparaît en haut.</p>
       <div className="px-4 flex flex-col gap-5">
         {groups.length === 0 && <p className="card p-5 text-[15px] text-muted">Aucun sujet en attente.</p>}
         {groups.map((g) => (
