@@ -10,9 +10,11 @@ export function BackupBanner() {
   const [open, setOpen] = useState(false);
   if (!state?.needsReminder && !open) return null;
 
-  const label = state?.lastBackupAt
-    ? `Dernière sauvegarde il y a ${state.ageDays} jours.`
-    : 'Aucune sauvegarde pour le moment.';
+  const label = !state?.lastBackupAt
+    ? 'Aucune sauvegarde pour le moment.'
+    : (state.ageDays ?? 0) > 30
+      ? `Dernière sauvegarde il y a ${state.ageDays} jours.`
+      : `${state.changesSinceBackup} modifications depuis la dernière sauvegarde.`;
 
   return (
     <>
